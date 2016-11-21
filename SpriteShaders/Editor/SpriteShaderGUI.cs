@@ -4,9 +4,9 @@ using UnityEditor;
 
 public class SpriteShaderGUI : ShaderGUI
 {
-	private static readonly string kShaderVertexLit = "Game/Sprite Vertex Lit";
-	private static readonly string kShaderPixelLit = "Game/Sprite Pixel Lit";
-	private static readonly string kShaderUnlit = "Game/Sprite Unlit";
+	private static readonly string kShaderVertexLit = "Sprite (Vertex Lit)";
+	private static readonly string kShaderPixelLit = "Sprite (Pixel Lit)";
+	private static readonly string kShaderUnlit = "Sprite (Unlit)";
 	private static readonly int kSolidQueue = 2000;
 	private static readonly int kAlphaTestQueue = 2450;
 	private static readonly int kTransparentQueue = 3000;
@@ -95,7 +95,7 @@ public class SpriteShaderGUI : ShaderGUI
 		base.AssignNewShaderToMaterial(material, oldShader, newShader);
 
 		//If not originally a sprite shader set default keywords
-		if (oldShader.name != "Sprite (Pixel Lit)" && oldShader.name != "Sprite (Vertex Lit)" && oldShader.name != "Sprite (Unlit)")
+		if (oldShader.name != kShaderVertexLit && oldShader.name != kShaderPixelLit && oldShader.name != kShaderUnlit)
 		{
 			SetDefaultSpriteKeywords(material, newShader);
 		}
