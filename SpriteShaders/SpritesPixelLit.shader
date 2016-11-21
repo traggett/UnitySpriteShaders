@@ -36,7 +36,7 @@ Shader "Sprite (Pixel Lit)"
 	
 	SubShader
 	{
-		Tags { "Queue"="Transparent" "RenderType"="Transparent" }
+		Tags { "Queue"="Transparent" "RenderType"="Sprite" }
 		LOD 200
 		
 		Pass

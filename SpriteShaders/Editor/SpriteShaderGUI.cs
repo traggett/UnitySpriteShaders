@@ -291,15 +291,13 @@ public class SpriteShaderGUI : ShaderGUI
 			SetKeyword(material, "_FIXED_NORMALS", meshNormals ? false : fixedNormalsBackRendering ? false : true);
 			SetKeyword(material, "_FIXED_NORMALS_BACK_RENDERING", meshNormals ? false : fixedNormalsBackRendering);
 		}
-
+		
 		if (!meshNormals)
 		{
 			Vector3 normal = EditorGUILayout.Vector3Field(new GUIContent("Fixed Normal", "Defined in Camera Space. Should normally be (0,0,-1)."), _fixedNormal.vectorValue);
 			_fixedNormal.vectorValue = new Vector4(normal.x, normal.y, normal.z, 1.0f);
 
 			EditorGUI.BeginChangeCheck();
-
-			
 
 			bool backRendering = EditorGUILayout.Toggle(new GUIContent("Fixed Normal Back Rendering", "Tick only if you are going to rotate the sprite to face away from the camera, the fixed normal will be flipped to compensate."), 
 														material.IsKeywordEnabled("_FIXED_NORMALS_BACK_RENDERING"));
@@ -366,10 +364,10 @@ public class SpriteShaderGUI : ShaderGUI
 	{
 		//Disable emission by default (is set on by default in standard shader)
 		SetKeyword(material, "_EMISSION", false);
-		//Start with premultiply alpha by default
+		//Start with preMultiply alpha by default
 		SetKeyword(material, "_ALPHAPREMULTIPLY_ON", true);
 		//Start with fixed normal by default
-		//SetKeyword(material, "_FIXED_NORMALS", true);
+		SetKeyword(material, "_FIXED_NORMALS", true);
 	}
 
 	private void SetLightModeFromShader(Material material)
@@ -411,6 +409,16 @@ public class SpriteShaderGUI : ShaderGUI
 		MaterialChanged(material);
 	}
 
+	private static void SetRenderQueue(Material material, string queue)
+	{
+		//Set special sprite render queue if using fixed normal so can render custom depthNormal texture
+		bool fixedNormals = material.IsKeywordEnabled("_FIXED_NORMALS");
+		bool fixedNormalsBackRendering = material.IsKeywordEnabled("_FIXED_NORMALS_BACK_RENDERING");
+		bool meshNormals = !fixedNormals && !fixedNormalsBackRendering;
+		material.SetOverrideTag("RenderType", meshNormals ? queue : "Sprite");
+	}
+
+
 	private static void SetMaterialKeywords(Material material)
 	{
 		bool normalMap = material.HasProperty("_BumpMap") && material.GetTexture("_BumpMap") != null;
@@ -436,7 +444,7 @@ public class SpriteShaderGUI : ShaderGUI
 				{
 					material.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.One);
 					material.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.Zero);
-					material.SetOverrideTag("RenderType", "Opaque");
+					SetRenderQueue(material, "Opaque");
 					renderQueue = kSolidQueue;
 				}
 				break;
@@ -444,7 +452,7 @@ public class SpriteShaderGUI : ShaderGUI
 				{ 
 					material.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
 					material.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.One);
-					material.SetOverrideTag("RenderType", "Transparent");
+					SetRenderQueue(material, "Transparent");
 					renderQueue = kTransparentQueue;
 				}
 				break;
@@ -452,7 +460,7 @@ public class SpriteShaderGUI : ShaderGUI
 				{
 					material.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.One);
 					material.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcColor);
-					material.SetOverrideTag("RenderType", "Transparent");
+					SetRenderQueue(material, "Transparent");
 					renderQueue = kTransparentQueue;
 				}			
 				break;
@@ -460,7 +468,7 @@ public class SpriteShaderGUI : ShaderGUI
 				{
 					material.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.Zero);
 					material.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.SrcColor);
-					material.SetOverrideTag("RenderType", "Transparent");
+					SetRenderQueue(material, "Transparent");
 					renderQueue = kTransparentQueue;
 				}			
 				break;
@@ -468,7 +476,7 @@ public class SpriteShaderGUI : ShaderGUI
 				{
 					material.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.DstColor);
 					material.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.SrcColor);
-					material.SetOverrideTag("RenderType", "Transparent");
+					SetRenderQueue(material, "Transparent");
 					renderQueue = kTransparentQueue;
 				}			
 				break;
@@ -478,7 +486,7 @@ public class SpriteShaderGUI : ShaderGUI
 				{
 					material.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.One);
 					material.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
-					material.SetOverrideTag("RenderType", zWrite ? "TransparentCutout" : "Transparent");
+					SetRenderQueue(material, zWrite ? "TransparentCutout" : "Transparent");
 					renderQueue = zWrite ? kAlphaTestQueue : kTransparentQueue;
 				}
 				break;

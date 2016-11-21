@@ -165,10 +165,10 @@ fixed3 calculateAmbientLight(half3 normalWorld)
 #if defined(TRI_COLOR_AMBIENT)	
 
 	//Magic constants used to tweak ambient to approximate pixel shader spherical harmonics 
-	fixed3 worldUp = fixed3(0,1,0);
-	float skyGroundDotMul = 2.5;
-	float minEquatorMix = 0.5;
-	float equatorColorBlur = 0.33;
+	static const fixed3 worldUp = fixed3(0,1,0);
+	static const float skyGroundDotMul = 2.5;
+	static const float minEquatorMix = 0.5;
+	static const float equatorColorBlur = 0.33;
 	
 	float upDot = dot(normalWorld, worldUp);
 	
