@@ -38,8 +38,7 @@ public class SpriteShaderGUI : ShaderGUI
 
 	private MaterialProperty _mainTexture = null;
 	private MaterialProperty _color = null;
-	private MaterialProperty _blendMode = null;
-
+	
 	private MaterialProperty _emissionMap = null;
 	private MaterialProperty _emissionColor = null;
 	private MaterialProperty _emissionPower = null;
@@ -94,6 +93,13 @@ public class SpriteShaderGUI : ShaderGUI
 	public override void AssignNewShaderToMaterial(Material material, Shader oldShader, Shader newShader)
 	{
 		base.AssignNewShaderToMaterial(material, oldShader, newShader);
+
+		//If not originally a sprite shader set default keywords
+		if (oldShader.name != "Sprite (Pixel Lit)" && oldShader.name != "Sprite (Vertex Lit)" && oldShader.name != "Sprite (Unlit)")
+		{
+			SetDefaultSpriteKeywords(material, newShader);
+		}
+
 		SetMaterialKeywords(material);
 		SetLightModeFromShader(material);
 	}
@@ -104,8 +110,7 @@ public class SpriteShaderGUI : ShaderGUI
 	{
 		_mainTexture = FindProperty("_MainTex", props);
 		_color = FindProperty("_Color", props);
-		_blendMode = FindProperty("_BlendMode", props);
-
+		
 		_emissionMap = FindProperty("_EmissionMap", props, false);
 		_emissionColor = FindProperty("_EmissionColor", props, false);
 		_emissionPower = FindProperty("_EmissionPower", props, false);		
@@ -192,8 +197,7 @@ public class SpriteShaderGUI : ShaderGUI
 
 		if (EditorGUI.EndChangeCheck())
 		{
-			foreach (var obj in _blendMode.targets)
-				MaterialChanged((Material)obj);
+			MaterialChanged(material);
 		}
 	}
 
@@ -357,6 +361,17 @@ public class SpriteShaderGUI : ShaderGUI
 	}
 	#endregion
 
+	#region Private Functions
+	private void SetDefaultSpriteKeywords(Material material, Shader shader)
+	{
+		//Disable emission by default (is set on by default in standard shader)
+		SetKeyword(material, "_EMISSION", false);
+		//Start with premultiply alpha by default
+		SetKeyword(material, "_ALPHAPREMULTIPLY_ON", true);
+		//Start with fixed normal by default
+		//SetKeyword(material, "_FIXED_NORMALS", true);
+	}
+
 	private void SetLightModeFromShader(Material material)
 	{
 		if (material.shader.name == kShaderPixelLit)
@@ -398,8 +413,6 @@ public class SpriteShaderGUI : ShaderGUI
 
 	private static void SetMaterialKeywords(Material material)
 	{
-		eBlendMode blendMode = (eBlendMode)material.GetFloat("_BlendMode");
-
 		bool normalMap = material.HasProperty("_BumpMap") && material.GetTexture("_BumpMap") != null;
 		SetKeyword (material, "_NORMALMAP", normalMap);
 
@@ -413,12 +426,8 @@ public class SpriteShaderGUI : ShaderGUI
 		bool blendTexture = material.HasProperty("_BlendTex") && material.GetTexture("_BlendTex") != null;
 		SetKeyword(material, "_TEXTURE_BLEND", blendTexture);
 
-		SetKeyword(material, "_ALPHAPREMULTIPLY_ON", blendMode == eBlendMode.PreMultipliedAlpha);
-		SetKeyword(material, "_MULTIPLYBLEND", blendMode == eBlendMode.Multiply);
-		SetKeyword(material, "_MULTIPLYBLEND_X2", blendMode == eBlendMode.Multiplyx2);
-		SetKeyword(material, "_ADDITIVEBLEND", blendMode == eBlendMode.Additive);
-		SetKeyword(material, "_ADDITIVEBLEND_SOFT", blendMode == eBlendMode.SoftAdditive);
-
+		
+		eBlendMode blendMode = GetMaterialBlendMode(material);
 		int renderQueue;
 
 		switch (blendMode)
@@ -501,15 +510,37 @@ public class SpriteShaderGUI : ShaderGUI
 		}
 	}
 
+	private static eBlendMode GetMaterialBlendMode(Material material)
+	{
+		if (material.IsKeywordEnabled("_ALPHAPREMULTIPLY_ON"))
+			return eBlendMode.PreMultipliedAlpha;
+		if (material.IsKeywordEnabled("_MULTIPLYBLEND"))
+			return eBlendMode.Multiply;
+		if (material.IsKeywordEnabled("_MULTIPLYBLEND_X2"))
+			return eBlendMode.Multiplyx2;
+		if (material.IsKeywordEnabled("_ADDITIVEBLEND"))
+			return eBlendMode.Additive;
+		if (material.IsKeywordEnabled("_ADDITIVEBLEND_SOFT"))
+			return eBlendMode.SoftAdditive;
+
+		return eBlendMode.StandardAlpha;
+	}
+
 	private void BlendModePopup()
 	{
-		eBlendMode mode = (eBlendMode)_blendMode.floatValue;
+		Material material = _materialEditor.target as Material;
+		eBlendMode blendMode = GetMaterialBlendMode(material);
 		EditorGUI.BeginChangeCheck();
-		mode = (eBlendMode)EditorGUILayout.Popup("Blend Mode", (int)mode, Enum.GetNames(typeof(eBlendMode)));
+		blendMode = (eBlendMode)EditorGUILayout.Popup("Blend Mode", (int)blendMode, Enum.GetNames(typeof(eBlendMode)));
+
 		if (EditorGUI.EndChangeCheck())
 		{
-			_materialEditor.RegisterPropertyChangeUndo("Blend Mode");
-			_blendMode.floatValue = (float)mode;
+			SetKeyword(material, "_ALPHAPREMULTIPLY_ON", blendMode == eBlendMode.PreMultipliedAlpha);
+			SetKeyword(material, "_MULTIPLYBLEND", blendMode == eBlendMode.Multiply);
+			SetKeyword(material, "_MULTIPLYBLEND_X2", blendMode == eBlendMode.Multiplyx2);
+			SetKeyword(material, "_ADDITIVEBLEND", blendMode == eBlendMode.Additive);
+			SetKeyword(material, "_ADDITIVEBLEND_SOFT", blendMode == eBlendMode.SoftAdditive);
 		}
 	}
+	#endregion
 }
