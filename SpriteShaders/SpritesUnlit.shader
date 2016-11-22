@@ -17,7 +17,6 @@ Shader "Sprite (Unlit)"
 		_BlendTex ("Blend Texture", 2D) = "white" {}
 		_BlendAmount ("Blend", Range(0,1)) = 0.0
 		
-		[HideInInspector] _BlendMode ("__mode", Float) = 0.0
 		[HideInInspector] _SrcBlend ("__src", Float) = 1.0
 		[HideInInspector] _DstBlend ("__dst", Float) = 0.0
 		[HideInInspector] _RenderQueue ("__queue", Float) = 0.0
@@ -26,7 +25,7 @@ Shader "Sprite (Unlit)"
 	
 	SubShader
 	{
-		Tags { "Queue"="Transparent" "RenderType"="Transparent" }
+		Tags { "Queue"="Transparent" "RenderType"="Sprite" }
 		LOD 100
 		
 		Pass

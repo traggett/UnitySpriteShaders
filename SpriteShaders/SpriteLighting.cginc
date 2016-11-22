@@ -40,7 +40,13 @@ inline half3 calculateSpriteWorldNormal(VertexInput vertex)
 #else //MESH_NORMALS
 	//Rotate fixed normal by inverse camera matrix to convert the fixed normal into world space
 	float3x3 invView = transpose((float3x3)UNITY_MATRIX_VP);
-	return normalize(mul(invView, _FixedNormal.xyz));
+	float3 normal = _FixedNormal.xyz;
+	
+#if UNITY_REVERSED_Z
+	normal.z = -normal.z;
+#endif
+
+	return normalize(mul(invView, normal));
 #endif // !MESH_NORMALS
 }
 
@@ -49,7 +55,11 @@ inline half3 calculateSpriteViewNormal(VertexInput vertex)
 #if defined(MESH_NORMALS)
 	return normalize(mul((float3x3)UNITY_MATRIX_IT_MV, vertex.normal));
 #else // !MESH_NORMALS
-	return _FixedNormal;
+	float3 normal = _FixedNormal.xyz;
+#if UNITY_REVERSED_Z
+	normal.z = -normal.z;
+#endif
+	return normal;
 #endif // !MESH_NORMALS
 }
 
