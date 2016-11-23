@@ -365,7 +365,7 @@ public class SpriteShaderGUI : ShaderGUI
 		//Disable emission by default (is set on by default in standard shader)
 		SetKeyword(material, "_EMISSION", false);
 		//Start with preMultiply alpha by default
-		SetKeyword(material, "_ALPHAPREMULTIPLY_ON", true);
+		SetBlendMode(material, eBlendMode.PreMultipliedAlpha);
 		//Start with fixed normal by default
 		SetKeyword(material, "_FIXED_NORMALS", true);
 	}
@@ -411,13 +411,18 @@ public class SpriteShaderGUI : ShaderGUI
 
 	private static void SetRenderQueue(Material material, string queue)
 	{
-		//Set special sprite render queue if using fixed normal so can render custom depthNormal texture
-		bool fixedNormals = material.IsKeywordEnabled("_FIXED_NORMALS");
-		bool fixedNormalsBackRendering = material.IsKeywordEnabled("_FIXED_NORMALS_BACK_RENDERING");
-		bool meshNormals = !fixedNormals && !fixedNormalsBackRendering;
-		material.SetOverrideTag("RenderType", meshNormals ? queue : "Sprite");
-	}
+		bool meshNormal = true;
 
+		if (material.HasProperty("_FixedNormal"))
+		{
+			//Set special sprite render queue if using fixed normal so can render custom depthNormal texture
+			bool fixedNormals = material.IsKeywordEnabled("_FIXED_NORMALS");
+			bool fixedNormalsBackRendering = material.IsKeywordEnabled("_FIXED_NORMALS_BACK_RENDERING");
+			meshNormal = !fixedNormals && !fixedNormalsBackRendering;
+		}
+		
+		material.SetOverrideTag("RenderType", meshNormal ? queue : "Sprite");
+	}
 
 	private static void SetMaterialKeywords(Material material)
 	{
@@ -433,66 +438,9 @@ public class SpriteShaderGUI : ShaderGUI
 
 		bool blendTexture = material.HasProperty("_BlendTex") && material.GetTexture("_BlendTex") != null;
 		SetKeyword(material, "_TEXTURE_BLEND", blendTexture);
-
 		
 		eBlendMode blendMode = GetMaterialBlendMode(material);
-		int renderQueue;
-
-		switch (blendMode)
-		{
-			case eBlendMode.Solid:
-				{
-					material.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.One);
-					material.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.Zero);
-					SetRenderQueue(material, "Opaque");
-					renderQueue = kSolidQueue;
-				}
-				break;
-			case eBlendMode.Additive:
-				{ 
-					material.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
-					material.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.One);
-					SetRenderQueue(material, "Transparent");
-					renderQueue = kTransparentQueue;
-				}
-				break;
-			case eBlendMode.SoftAdditive:
-				{
-					material.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.One);
-					material.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcColor);
-					SetRenderQueue(material, "Transparent");
-					renderQueue = kTransparentQueue;
-				}			
-				break;
-			case eBlendMode.Multiply:
-				{
-					material.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.Zero);
-					material.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.SrcColor);
-					SetRenderQueue(material, "Transparent");
-					renderQueue = kTransparentQueue;
-				}			
-				break;
-			case eBlendMode.Multiplyx2:
-				{
-					material.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.DstColor);
-					material.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.SrcColor);
-					SetRenderQueue(material, "Transparent");
-					renderQueue = kTransparentQueue;
-				}			
-				break;
-			case eBlendMode.PreMultipliedAlpha:
-			case eBlendMode.StandardAlpha:
-			default:
-				{
-					material.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.One);
-					material.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
-					SetRenderQueue(material, zWrite ? "TransparentCutout" : "Transparent");
-					renderQueue = zWrite ? kAlphaTestQueue : kTransparentQueue;
-				}
-				break;
-		}
-		
-		material.renderQueue = renderQueue + material.GetInt("_RenderQueue");
+		SetBlendMode(material, blendMode);
 	}
 
 	private static void MaterialChanged(Material material)
@@ -530,6 +478,8 @@ public class SpriteShaderGUI : ShaderGUI
 			return eBlendMode.Additive;
 		if (material.IsKeywordEnabled("_ADDITIVEBLEND_SOFT"))
 			return eBlendMode.SoftAdditive;
+		if (material.GetInt("_DstBlend") == (int)UnityEngine.Rendering.BlendMode.Zero)
+			return eBlendMode.Solid;
 
 		return eBlendMode.StandardAlpha;
 	}
@@ -543,12 +493,76 @@ public class SpriteShaderGUI : ShaderGUI
 
 		if (EditorGUI.EndChangeCheck())
 		{
-			SetKeyword(material, "_ALPHAPREMULTIPLY_ON", blendMode == eBlendMode.PreMultipliedAlpha);
-			SetKeyword(material, "_MULTIPLYBLEND", blendMode == eBlendMode.Multiply);
-			SetKeyword(material, "_MULTIPLYBLEND_X2", blendMode == eBlendMode.Multiplyx2);
-			SetKeyword(material, "_ADDITIVEBLEND", blendMode == eBlendMode.Additive);
-			SetKeyword(material, "_ADDITIVEBLEND_SOFT", blendMode == eBlendMode.SoftAdditive);
+			SetBlendMode(material, blendMode);
 		}
+	}
+
+	private static void SetBlendMode(Material material, eBlendMode blendMode)
+	{
+		SetKeyword(material, "_ALPHAPREMULTIPLY_ON", blendMode == eBlendMode.PreMultipliedAlpha);
+		SetKeyword(material, "_MULTIPLYBLEND", blendMode == eBlendMode.Multiply);
+		SetKeyword(material, "_MULTIPLYBLEND_X2", blendMode == eBlendMode.Multiplyx2);
+		SetKeyword(material, "_ADDITIVEBLEND", blendMode == eBlendMode.Additive);
+		SetKeyword(material, "_ADDITIVEBLEND_SOFT", blendMode == eBlendMode.SoftAdditive);
+
+		int renderQueue;
+
+		switch (blendMode)
+		{
+			case eBlendMode.Solid:
+				{
+					material.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.One);
+					material.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.Zero);
+					SetRenderQueue(material, "Opaque");
+					renderQueue = kSolidQueue;
+				}
+				break;
+			case eBlendMode.Additive:
+				{
+					material.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
+					material.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.One);
+					SetRenderQueue(material, "Transparent");
+					renderQueue = kTransparentQueue;
+				}
+				break;
+			case eBlendMode.SoftAdditive:
+				{
+					material.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.One);
+					material.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcColor);
+					SetRenderQueue(material, "Transparent");
+					renderQueue = kTransparentQueue;
+				}
+				break;
+			case eBlendMode.Multiply:
+				{
+					material.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.Zero);
+					material.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.SrcColor);
+					SetRenderQueue(material, "Transparent");
+					renderQueue = kTransparentQueue;
+				}
+				break;
+			case eBlendMode.Multiplyx2:
+				{
+					material.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.DstColor);
+					material.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.SrcColor);
+					SetRenderQueue(material, "Transparent");
+					renderQueue = kTransparentQueue;
+				}
+				break;
+			case eBlendMode.PreMultipliedAlpha:
+			case eBlendMode.StandardAlpha:
+			default:
+				{
+					bool zWrite = material.GetFloat("_ZWrite") > 0.0f;
+					material.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.One);
+					material.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
+					SetRenderQueue(material, zWrite ? "TransparentCutout" : "Transparent");
+					renderQueue = zWrite ? kAlphaTestQueue : kTransparentQueue;
+				}
+				break;
+		}
+
+		material.renderQueue = renderQueue + material.GetInt("_RenderQueue");
 	}
 	#endregion
 }
