@@ -170,6 +170,19 @@ public class SpriteShaderGUI : ShaderGUI
 				RenderShadowsProperties(material);
 			}
 
+			if (_fixedNormal != null)
+			{
+				GUILayout.Label("Ambient Spherical Harmonics", EditorStyles.boldLabel);
+				{
+					RenderSphericalHarmonicsProperties(material);
+				}
+			}
+
+			GUILayout.Label("Fog", EditorStyles.boldLabel);
+			{
+				RenderFogProperties(material);
+			}
+
 			GUILayout.Label("Color Adjustment", EditorStyles.boldLabel);
 			{
 				RenderColorProperties(material);
@@ -187,11 +200,6 @@ public class SpriteShaderGUI : ShaderGUI
 			{
 				GUILayout.Label("Rim Lighting", EditorStyles.boldLabel);
 				RenderRimLightingProperties(material);
-			}
-
-			GUILayout.Label("Fog", EditorStyles.boldLabel);
-			{
-				RenderFogProperties(material);
 			}
 		}
 
@@ -357,6 +365,16 @@ public class SpriteShaderGUI : ShaderGUI
 			SetKeyword(material, "_FOG", fog);
 		}
 	}
+
+	protected virtual void RenderSphericalHarmonicsProperties(Material material)
+	{
+		EditorGUI.BeginChangeCheck();
+		bool enabled = EditorGUILayout.Toggle(new GUIContent("Enable Spherical Harmonics", "Enable to use spherical harmonics to calculate ambient light / light probes. In vertex-lit mode this will be approximated from scenes ambient trilight settings."), material.IsKeywordEnabled("_SPHERICAL_HARMONICS"));
+		if (EditorGUI.EndChangeCheck())
+		{
+			SetKeyword(material, "_SPHERICAL_HARMONICS", enabled);
+		}
+	}
 	#endregion
 
 	#region Private Functions
@@ -368,6 +386,8 @@ public class SpriteShaderGUI : ShaderGUI
 		SetBlendMode(material, eBlendMode.PreMultipliedAlpha);
 		//Start with fixed normal by default
 		SetKeyword(material, "_FIXED_NORMALS", true);
+		//Start with spherical harmonics enabled?
+		SetKeyword(material, "_SPHERICAL_HARMONICS", true);
 	}
 
 	private void SetLightModeFromShader(Material material)

@@ -60,6 +60,7 @@ Shader "Sprite (Pixel Lit)"
 				#pragma shader_feature _DIFFUSE_RAMP
 				#pragma shader_feature _COLOR_ADJUST
 				#pragma shader_feature _TEXTURE_BLEND
+				#pragma shader_feature _SPHERICAL_HARMONICS
 				#pragma shader_feature _FOG
 				
 				#pragma multi_compile_fwdbase
