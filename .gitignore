@@ -1,0 +1,5 @@
+*.meta
+/LICENSE.meta
+/*.meta
+/SpriteShaders/*.meta
+/SpriteShaders/Editor/*.meta
