@@ -13,6 +13,7 @@ SubShader {
 	Pass {
 		Cull Off
 CGPROGRAM
+#pragma target 3.0
 #pragma vertex vert
 #pragma fragment frag
 #include "UnityCG.cginc"
@@ -54,6 +55,7 @@ SubShader {
 	Tags { "RenderType"="Opaque" }
 	Pass {
 CGPROGRAM
+#pragma target 3.0
 #pragma vertex vert
 #pragma fragment frag
 #include "UnityCG.cginc"
@@ -82,6 +84,7 @@ SubShader {
 	Tags { "RenderType"="TransparentCutout" }
 	Pass {
 CGPROGRAM
+#pragma target 3.0
 #pragma vertex vert
 #pragma fragment frag
 #include "UnityCG.cginc"
@@ -118,6 +121,7 @@ SubShader {
 	Tags { "RenderType"="TreeBark" }
 	Pass {
 CGPROGRAM
+#pragma target 3.0
 #pragma vertex vert
 #pragma fragment frag
 #include "UnityCG.cginc"
@@ -152,6 +156,7 @@ SubShader {
 	Tags { "RenderType"="TreeLeaf" }
 	Pass {
 CGPROGRAM
+#pragma target 3.0
 #pragma vertex vert
 #pragma fragment frag
 #include "UnityCG.cginc"
@@ -191,6 +196,7 @@ SubShader {
 	Tags { "RenderType"="TreeOpaque" "DisableBatching"="True" }
 	Pass {
 CGPROGRAM
+#pragma target 3.0
 #pragma vertex vert
 #pragma fragment frag
 #include "UnityCG.cginc"
@@ -228,6 +234,7 @@ SubShader {
 	Pass {
 		Cull Back
 CGPROGRAM
+#pragma target 3.0
 #pragma vertex vert
 #pragma fragment frag
 #include "UnityCG.cginc"
@@ -270,6 +277,7 @@ ENDCG
 	Pass {
 		Cull Front
 CGPROGRAM
+#pragma target 3.0
 #pragma vertex vert
 #pragma fragment frag
 #include "UnityCG.cginc"
@@ -316,6 +324,7 @@ SubShader {
 	Pass {
 		Cull Off
 CGPROGRAM
+#pragma target 3.0
 #pragma vertex vert
 #pragma fragment frag
 #include "UnityCG.cginc"
@@ -353,6 +362,7 @@ SubShader {
 	Pass {
 		Cull Off		
 CGPROGRAM
+#pragma target 3.0
 #pragma vertex vert
 #pragma fragment frag
 #include "UnityCG.cginc"
@@ -395,6 +405,7 @@ SubShader {
 	Pass {
 		Cull Off
 CGPROGRAM
+#pragma target 3.0
 #pragma vertex vert
 #pragma fragment frag
 #include "UnityCG.cginc"
