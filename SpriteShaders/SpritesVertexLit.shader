@@ -36,7 +36,7 @@ Shader "Sprite (Vertex Lit)"
 	
 	SubShader
 	{
-		Tags { "Queue"="Transparent" "RenderType"="Sprite" }
+		Tags { "Queue"="Transparent" "RenderType"="Sprite" "AlphaDepth"="False" }
 		LOD 150
 		
 		Pass

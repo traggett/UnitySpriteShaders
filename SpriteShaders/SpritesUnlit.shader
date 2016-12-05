@@ -25,7 +25,7 @@ Shader "Sprite (Unlit)"
 	
 	SubShader
 	{
-		Tags { "Queue"="Transparent" "RenderType"="Sprite" }
+		Tags { "Queue"="Transparent" "RenderType"="Sprite" "AlphaDepth"="False" }
 		LOD 100
 		
 		Pass

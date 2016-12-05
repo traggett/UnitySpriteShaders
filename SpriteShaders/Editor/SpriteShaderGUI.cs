@@ -458,9 +458,12 @@ public class SpriteShaderGUI : ShaderGUI
 
 		bool blendTexture = material.HasProperty("_BlendTex") && material.GetTexture("_BlendTex") != null;
 		SetKeyword(material, "_TEXTURE_BLEND", blendTexture);
-		
+
 		eBlendMode blendMode = GetMaterialBlendMode(material);
 		SetBlendMode(material, blendMode);
+		
+		bool alphaDepthWrite = !zWrite && (blendMode == eBlendMode.StandardAlpha || blendMode == eBlendMode.PreMultipliedAlpha);
+		material.SetOverrideTag("AlphaDepth", alphaDepthWrite ? "True" : "False");
 	}
 
 	private static void MaterialChanged(Material material)
