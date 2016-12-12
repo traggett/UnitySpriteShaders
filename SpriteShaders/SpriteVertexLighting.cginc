@@ -212,18 +212,16 @@ fixed3 calculateAmbientLight(half3 normalWorld)
 
 inline fixed3 calculateLightDiffuse(fixed3 lightColor, half3 viewNormal, half3 lightViewDir, float attenuation)
 {
-	float angleDot = dot(viewNormal, lightViewDir);
-	fixed3 diffuse = calculateRampedDiffuse(lightColor, attenuation, angleDot);
-	return diffuse;
+	float angleDot = max(0, dot(viewNormal, lightViewDir));
+	return calculateRampedDiffuse(lightColor, attenuation, angleDot);
 }
 
 #else
 
 inline fixed3 calculateLightDiffuse(fixed3 attenuatedLightColor, half3 viewNormal, half3 lightViewDir)
 {
-	float angleDot = dot(viewNormal, lightViewDir);
-	fixed3 diffuse = attenuatedLightColor * angleDot;
-	return diffuse;
+	float angleDot = max(0, dot(viewNormal, lightViewDir));
+	return attenuatedLightColor * angleDot;
 }
 
 #endif // _NORMALMAP
@@ -308,8 +306,8 @@ inline fixed3 calculateLightDiffuse(fixed3 attenuatedLightColor, half3 viewNorma
 inline fixed3 calculateLightDiffuse(int index, float3 viewPos, half3 viewNormal)
 {
 	VertexLightInfo lightInfo = getVertexLightAttenuatedInfo(index, viewPos);
-	float diff = max (0, dot (viewNormal, lightInfo.lightDirection));
-	return lightInfo.lightColor * diff;
+	float angleDot = max(0, dot(viewNormal, lightInfo.lightDirection));
+	return lightInfo.lightColor * angleDot;
 }
 
 #endif // !PER_PIXEL_LIGHTING
