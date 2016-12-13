@@ -55,7 +55,7 @@ inline fixed3 calculateLightDiffuse(VertexOutput input, float3 normalWorld)
 	float3 lightWorldDirection = normalize(_WorldSpaceLightPos0.xyz - input.posWorld.xyz * _WorldSpaceLightPos0.w);
 	
 	float attenuation = LIGHT_ATTENUATION(input);
-	float angleDot = dot(normalWorld, lightWorldDirection);
+	float angleDot = max(0, dot(normalWorld, lightWorldDirection));
 	
 #if defined(_DIFFUSE_RAMP)
 	fixed3 lightDiffuse = calculateRampedDiffuse(_LightColor0.rgb, attenuation, angleDot);
@@ -147,7 +147,7 @@ fixed4 fragBase(VertexOutput input) : SV_Target
 	fixed3 diffuse = calculateLightDiffuse(input, normalWorld);
 	
 	//Combine along with vertex lighting for the base lighting pass
-	fixed3 lighting = saturate(ambient + diffuse + input.vertexLighting);
+	fixed3 lighting = ambient + diffuse + input.vertexLighting;
 	
 	APPLY_EMISSION(lighting, input.texcoord)
 	
