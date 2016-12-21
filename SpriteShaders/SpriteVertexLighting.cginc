@@ -418,11 +418,7 @@ fixed4 frag(VertexOutput input) : SV_Target
 #endif // !PER_PIXEL_LIGHTING	
 	
 	COLORISE(pixel)
-	
-#if defined(_FOG)
-	fixed4 fogColor = lerp(fixed4(0,0,0,0), unity_FogColor, pixel.a);
-	UNITY_APPLY_FOG_COLOR(input.fogCoord, pixel, fogColor);
-#endif // _FOG	
+	APPLY_FOG(pixel, input)
 	
 	return pixel;
 }

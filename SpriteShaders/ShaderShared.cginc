@@ -321,6 +321,48 @@ inline fixed4 adjustColor(fixed4 color)
 #endif // !_COLOR_ADJUST
 
 ////////////////////////////////////////
+// Fog
+//
+
+#if defined(_FOG) && (defined(FOG_LINEAR) || defined(FOG_EXP) || defined(FOG_EXP2))
+
+inline fixed4 applyFog(fixed4 pixel, float1 fogCoord) 
+{
+#if defined(_ADDITIVEBLEND) || defined(_ADDITIVEBLEND_SOFT)
+	//In additive mode blend from clear to black based on luminance
+	float luminance = pixel.r * 0.3 + pixel.g * 0.59 + pixel.b * 0.11;
+	fixed4 fogColor = lerp(fixed4(0,0,0,0), fixed4(0,0,0,1), luminance);
+#elif defined(_MULTIPLYBLEND)
+	//In multiplied mode fade to white based on inverse luminance
+	float luminance = pixel.r * 0.3 + pixel.g * 0.59 + pixel.b * 0.11;
+	fixed4 fogColor = lerp(fixed4(1,1,1,1), fixed4(0,0,0,0), luminance);
+#elif defined(_MULTIPLYBLEND_X2)
+	//In multipliedx2 mode fade to grey based on inverse luminance
+	float luminance = pixel.r * 0.3 + pixel.g * 0.59 + pixel.b * 0.11;
+	fixed4 fogColor = lerp(fixed4(0.5f,0.5f,0.5f,0.5f), fixed4(0,0,0,0), luminance);
+#else
+	//Otherwise blend to fog color based on pixel alpha
+	fixed4 fogColor = lerp(fixed4(0,0,0,0), unity_FogColor, pixel.a);
+#endif 
+	
+	UNITY_APPLY_FOG_COLOR(fogCoord, pixel, fogColor);
+	
+	return pixel;
+}
+
+#define APPLY_FOG(pixel, input) pixel = applyFog(pixel, input.fogCoord);
+	
+#define APPLY_FOG_ADDITIVE(pixel, input) \
+	UNITY_APPLY_FOG_COLOR(input.fogCoord, pixel.rgb, fixed4(0,0,0,0)); // fog towards black in additive pass
+	
+#else
+
+#define APPLY_FOG(pixel, input)
+#define APPLY_FOG_ADDITIVE(pixel, input)
+
+#endif
+
+////////////////////////////////////////
 // Texture functions
 //
 

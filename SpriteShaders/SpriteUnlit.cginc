@@ -47,6 +47,9 @@ VertexOutput vert(VertexInput input)
 // Fragment program
 //
 
+
+
+
 fixed4 frag(VertexOutput input) : SV_Target
 {
 	fixed4 texureColor = calculateTexturePixel(input.texcoord.xy);
@@ -55,11 +58,7 @@ fixed4 frag(VertexOutput input) : SV_Target
 	fixed4 pixel = calculatePixel(texureColor, input.color);
 	
 	COLORISE(pixel)
-	
-#if defined(_FOG)
-	fixed4 fogColor = lerp(fixed4(0,0,0,0), unity_FogColor, pixel.a);
-	UNITY_APPLY_FOG_COLOR(input.fogCoord, pixel, fogColor);
-#endif // _FOG	
+	APPLY_FOG(pixel, input)
 	
 	return pixel;
 }

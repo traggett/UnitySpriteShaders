@@ -158,11 +158,7 @@ fixed4 fragBase(VertexOutput input) : SV_Target
 #endif
 	
 	COLORISE(pixel)
-	
-#if defined(_FOG)
-	fixed4 fogColor = lerp(fixed4(0,0,0,0), unity_FogColor, pixel.a);
-	UNITY_APPLY_FOG_COLOR(input.fogCoord, pixel, fogColor);
-#endif // _FOG
+	APPLY_FOG(pixel, input)
 	
 	return pixel;
 }
@@ -186,10 +182,7 @@ fixed4 fragAdd(VertexOutput input) : SV_Target
 	fixed4 pixel = calculateAdditiveLitPixel(texureColor, input.color, lighting);
 	
 	COLORISE_ADDITIVE(pixel)
-	
-#if defined(_FOG)
-	UNITY_APPLY_FOG_COLOR(input.fogCoord, pixel.rgb, fixed4(0,0,0,0)); // fog towards black in additive pass
-#endif // _FOG	
+	APPLY_FOG_ADDITIVE(pixel, input)
 	
 	return pixel;
 }
