@@ -3,6 +3,7 @@
 	
 #include "ShaderShared.cginc"
 #include "SpriteLighting.cginc"
+#include "SpriteSpecular.cginc"
 
 ////////////////////////////////////////
 // Defines
@@ -12,7 +13,7 @@
 #define SPOT_LIGHTS
 
 //Have to process lighting per pixel if using normal maps or a diffuse ramp or rim lighting or specular
-#if defined(_NORMALMAP) || defined(_DIFFUSE_RAMP) || defined(_RIM_LIGHTING) || defined(_SPECULAR) || defined(_SPECULAR_GLOSSMAP)
+#if defined(_NORMALMAP) || defined(_DIFFUSE_RAMP) || defined(_RIM_LIGHTING) || defined(SPECULAR)
 #define PER_PIXEL_LIGHTING
 #endif
 
@@ -299,15 +300,15 @@ inline fixed3 calculateLightDiffuse(fixed3 attenuatedLightColor, half3 viewNorma
 		ADD_VERTEX_LIGHT_DIFFUSE(index, diffuse, input, lightColor, viewNormal, lightViewDir) \
 	}
 	
-#if defined(_SPECULAR) || defined(_SPECULAR_GLOSSMAP)
+#if defined(SPECULAR)
 
-#define ADD_VERTEX_LIGHT_SPEC(index, input, viewNormal, specData, pbsData, indirectDiffuse, indirectSpecular) \
+#define ADD_VERTEX_LIGHT_SPEC(index, input, viewNormal, specData, combinedLightData, indirectDiffuse, indirectSpecular) \
 	{ \
 		half3 lightViewDir = input.VERTEX_LIGHT_##index##_DIR; \
 		fixed3 lightColor = fixed3(input.VERTEX_LIGHT_##index##_R, input.VERTEX_LIGHT_##index##_G, input.VERTEX_LIGHT_##index##_B); \
-		PBSData data = BRDF1_PBS(specData.specColor, specData.oneMinusReflectivity, specData.smoothness, viewNormal, fixed3(0,0,1), lightViewDir, lightColor, indirectDiffuse, indirectSpecular); \
-		pbsData.lighting += data.lighting; \
-		pbsData.specular += data.specular; \
+		SpecularLightData lightData = calculatePhysicsBasedSpecularLight(specData.specColor, specData.oneMinusReflectivity, specData.smoothness, viewNormal, fixed3(0,0,1), lightViewDir, lightColor, indirectDiffuse, indirectSpecular); \
+		combinedLightData.lighting += lightData.lighting; \
+		combinedLightData.specular += lightData.specular; \
 	}
 
 #endif
@@ -405,18 +406,18 @@ fixed4 frag(VertexOutput input) : SV_Target
 	
 	half3 normalView = normalize(mul((float3x3)UNITY_MATRIX_V, normalWorld));
 	
-#if defined(_SPECULAR) || defined(_SPECULAR_GLOSSMAP)
+#if defined(SPECULAR)
 
-	SpecularCommonData specData = SpecularSetup(input.texcoord.xy, texureColor, input.color);
+	SpecularCommonData specData = getSpecularData(input.texcoord.xy, texureColor, input.color);
 	
-	PBSData psbData = (PBSData)0;
-	ADD_VERTEX_LIGHT_SPEC(0, input, normalView, specData, psbData, ambient, unity_IndirectSpecColor.rgb)
-	ADD_VERTEX_LIGHT_SPEC(1, input, normalView, specData, psbData, fixed3(0,0,0), fixed3(0,0,0))
-	ADD_VERTEX_LIGHT_SPEC(2, input, normalView, specData, psbData, fixed3(0,0,0), fixed3(0,0,0))
-	ADD_VERTEX_LIGHT_SPEC(3, input, normalView, specData, psbData, fixed3(0,0,0), fixed3(0,0,0))
+	SpecularLightData combinedLightData = (SpecularLightData)0;
+	ADD_VERTEX_LIGHT_SPEC(0, input, normalView, specData, combinedLightData, ambient, unity_IndirectSpecColor.rgb)
+	ADD_VERTEX_LIGHT_SPEC(1, input, normalView, specData, combinedLightData, fixed3(0,0,0), fixed3(0,0,0))
+	ADD_VERTEX_LIGHT_SPEC(2, input, normalView, specData, combinedLightData, fixed3(0,0,0), fixed3(0,0,0))
+	ADD_VERTEX_LIGHT_SPEC(3, input, normalView, specData, combinedLightData, fixed3(0,0,0), fixed3(0,0,0))
 	
-	fixed4 pixel = calculateLitPixel(fixed4(specData.diffColor, specData.alpha), psbData.lighting);
-	pixel.rgb += psbData.specular;
+	fixed4 pixel = calculateLitPixel(fixed4(specData.diffColor, specData.alpha), combinedLightData.lighting);
+	pixel.rgb += combinedLightData.specular * specData.alpha;
 	
 	APPLY_EMISSION_SPECULAR(pixel, input.texcoord)
 	

@@ -148,6 +148,22 @@ public class SpriteShaderGUI : ShaderGUI
 				dataChanged |= RenderTextureProperties();
 			}
 
+			if (_metallic != null)
+			{
+				GUILayout.Label("Specular", EditorStyles.boldLabel);
+				{
+					dataChanged |= RenderSpecularProperties();
+				}
+			}
+
+			if (_emissionMap != null && _emissionColor != null)
+			{
+				GUILayout.Label("Emission", EditorStyles.boldLabel);
+				{
+					dataChanged |= RenderEmissionProperties();
+				}
+			}
+
 			GUILayout.Label("Depth", EditorStyles.boldLabel);
 			{
 				dataChanged |= RenderDepthProperties();
@@ -180,22 +196,6 @@ public class SpriteShaderGUI : ShaderGUI
 			GUILayout.Label("Color Adjustment", EditorStyles.boldLabel);
 			{
 				dataChanged |= RenderColorProperties();
-			}
-
-			if (_emissionMap != null && _emissionColor != null)
-			{
-				GUILayout.Label("Emission", EditorStyles.boldLabel);
-				{
-					dataChanged |= RenderEmissionProperties();
-				}
-			}
-
-			if (_metallic != null)
-			{
-				GUILayout.Label("Specular", EditorStyles.boldLabel);
-				{
-					dataChanged |= RenderSpecularProperties();
-				}
 			}
 
 			if (_rimColor != null)

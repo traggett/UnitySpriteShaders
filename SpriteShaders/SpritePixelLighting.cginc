@@ -3,6 +3,7 @@
 	
 #include "ShaderShared.cginc"
 #include "SpriteLighting.cginc"
+#include "SpriteSpecular.cginc"
 #include "AutoLight.cginc"
 
 ////////////////////////////////////////
@@ -99,6 +100,26 @@ fixed3 calculateAmbientLight(half3 normalWorld)
 	return ambient;
 }
 
+#if defined(SPECULAR)
+
+fixed4 calculateSpecularLight(SpecularCommonData s, float3 viewDir, float3 normal, float3 lightDir, float3 lightColor, half3 ambient)
+{
+	SpecularLightData data = calculatePhysicsBasedSpecularLight (s.specColor, s.oneMinusReflectivity, s.smoothness, normal, viewDir, lightDir, lightColor, ambient, unity_IndirectSpecColor.rgb);
+	fixed4 pixel = calculateLitPixel(fixed4(s.diffColor, s.alpha), data.lighting);
+	pixel.rgb += data.specular * s.alpha;
+	return pixel;
+}
+
+fixed4 calculateSpecularLightAdditive(SpecularCommonData s, float3 viewDir, float3 normal, float3 lightDir, float3 lightColor)
+{
+	SpecularLightData data = calculatePhysicsBasedSpecularLight (s.specColor, s.oneMinusReflectivity, s.smoothness, normal, viewDir, lightDir, lightColor, half3(0,0,0), half3(0,0,0));
+	fixed4 pixel = calculateAdditiveLitPixel(fixed4(s.diffColor, s.alpha), data.lighting);
+	pixel.rgb += data.specular * s.alpha;
+	return pixel;
+}
+
+#endif //SPECULAR
+
 ////////////////////////////////////////
 // Vertex program
 //
@@ -144,7 +165,7 @@ fixed4 fragBase(VertexOutput input) : SV_Target
 	fixed3 ambient = calculateAmbientLight(normalWorld);
 
 	
-#if defined(_SPECULAR) || defined(_SPECULAR_GLOSSMAP)
+#if defined(SPECULAR)
 	
 	//For directional lights _WorldSpaceLightPos0.w is set to zero
 	float3 lightWorldDirection = normalize(_WorldSpaceLightPos0.xyz - input.posWorld.xyz * _WorldSpaceLightPos0.w);
@@ -152,7 +173,7 @@ fixed4 fragBase(VertexOutput input) : SV_Target
 	
 	//Returns pixel lit by light, texture color should inlcluded alpha
 	half3 viewDir = normalize(_WorldSpaceCameraPos - input.posWorld.xyz);
-	fixed4 pixel = calculateSpecular(SpecularSetup(input.texcoord.xy, texureColor, input.color), viewDir, normalWorld, lightWorldDirection, _LightColor0.rgb * attenuation, ambient + input.vertexLighting);
+	fixed4 pixel = calculateSpecularLight(getSpecularData(input.texcoord.xy, texureColor, input.color), viewDir, normalWorld, lightWorldDirection, _LightColor0.rgb * attenuation, ambient + input.vertexLighting);
 	
 	APPLY_EMISSION_SPECULAR(pixel, input.texcoord)
 	
@@ -193,14 +214,14 @@ fixed4 fragAdd(VertexOutput input) : SV_Target
 	//Get normal direction
 	fixed3 normalWorld = calculateNormalWorld(input);
 		
-#if defined(_SPECULAR) || defined(_SPECULAR_GLOSSMAP)
+#if defined(SPECULAR)
 	
 	//For directional lights _WorldSpaceLightPos0.w is set to zero
 	float3 lightWorldDirection = normalize(_WorldSpaceLightPos0.xyz - input.posWorld.xyz * _WorldSpaceLightPos0.w);
 	float attenuation = LIGHT_ATTENUATION(input);
 	
 	half3 viewDir = normalize(_WorldSpaceCameraPos - input.posWorld.xyz);
-	fixed4 pixel = calculateSpecularAdditive(SpecularSetup(input.texcoord.xy, texureColor, input.color), viewDir, normalWorld, lightWorldDirection, _LightColor0.rgb * attenuation);
+	fixed4 pixel = calculateSpecularLightAdditive(getSpecularData(input.texcoord.xy, texureColor, input.color), viewDir, normalWorld, lightWorldDirection, _LightColor0.rgb * attenuation);
 	
 #else
 	
