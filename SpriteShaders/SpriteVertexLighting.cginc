@@ -3,7 +3,6 @@
 	
 #include "ShaderShared.cginc"
 #include "SpriteLighting.cginc"
-#include "UnityStandardUtils.cginc"
 
 ////////////////////////////////////////
 // Defines
@@ -12,8 +11,8 @@
 //Define to use spot lights (more expensive)
 #define SPOT_LIGHTS
 
-//Have to process lighting per pixel if using normal maps or a diffuse ramp or rim lighting
-#if defined(_NORMALMAP) || defined(_DIFFUSE_RAMP) || defined(_RIM_LIGHTING)
+//Have to process lighting per pixel if using normal maps or a diffuse ramp or rim lighting or specular
+#if defined(_NORMALMAP) || defined(_DIFFUSE_RAMP) || defined(_RIM_LIGHTING) || defined(_SPECULAR) || defined(_SPECULAR_GLOSSMAP)
 #define PER_PIXEL_LIGHTING
 #endif
 
@@ -194,12 +193,12 @@ fixed3 calculateAmbientLight(half3 normalWorld)
 	fixed3 equatorColor = lerp(equatorBlurredColor, unity_AmbientGround, -upDot) * step(upDot, 0) + lerp(equatorBlurredColor, unity_AmbientSky, upDot) * step(0, upDot);
 	
 	//Mix the two colors together based on how bright the equator light is
-	return lerp(skyGroundColor, equatorColor, saturate(equatorBright + minEquatorMix)) * 0.75;
+	return lerp(skyGroundColor, equatorColor, saturate(equatorBright + minEquatorMix));
 
 #else // !_SPHERICAL_HARMONICS
 
 	//Flat ambient is just the sky color
-	return unity_AmbientSky.rgb * 0.75;
+	return unity_AmbientSky.rgb;
 	
 #endif // !_SPHERICAL_HARMONICS	
 }
@@ -213,7 +212,8 @@ fixed3 calculateAmbientLight(half3 normalWorld)
 inline fixed3 calculateLightDiffuse(fixed3 lightColor, half3 viewNormal, half3 lightViewDir, float attenuation)
 {
 	float angleDot = max(0, dot(viewNormal, lightViewDir));
-	return calculateRampedDiffuse(lightColor, attenuation, angleDot);
+	fixed3 lightDiffuse = calculateRampedDiffuse(lightColor, attenuation, angleDot);
+	return lightDiffuse;
 }
 
 #else
@@ -221,7 +221,9 @@ inline fixed3 calculateLightDiffuse(fixed3 lightColor, half3 viewNormal, half3 l
 inline fixed3 calculateLightDiffuse(fixed3 attenuatedLightColor, half3 viewNormal, half3 lightViewDir)
 {
 	float angleDot = max(0, dot(viewNormal, lightViewDir));
-	return attenuatedLightColor * angleDot;
+	fixed3 lightDiffuse = attenuatedLightColor * angleDot;
+	
+	return lightDiffuse;
 }
 
 #endif // _NORMALMAP
@@ -296,7 +298,20 @@ inline fixed3 calculateLightDiffuse(fixed3 attenuatedLightColor, half3 viewNorma
 		fixed3 lightColor = fixed3(input.VERTEX_LIGHT_##index##_R, input.VERTEX_LIGHT_##index##_G, input.VERTEX_LIGHT_##index##_B); \
 		ADD_VERTEX_LIGHT_DIFFUSE(index, diffuse, input, lightColor, viewNormal, lightViewDir) \
 	}
+	
+#if defined(_SPECULAR) || defined(_SPECULAR_GLOSSMAP)
 
+#define ADD_VERTEX_LIGHT_SPEC(index, input, viewNormal, specData, pbsData, indirectDiffuse, indirectSpecular) \
+	{ \
+		half3 lightViewDir = input.VERTEX_LIGHT_##index##_DIR; \
+		fixed3 lightColor = fixed3(input.VERTEX_LIGHT_##index##_R, input.VERTEX_LIGHT_##index##_G, input.VERTEX_LIGHT_##index##_B); \
+		PBSData data = BRDF1_PBS(specData.specColor, specData.oneMinusReflectivity, specData.smoothness, viewNormal, fixed3(0,0,1), lightViewDir, lightColor, indirectDiffuse, indirectSpecular); \
+		pbsData.lighting += data.lighting; \
+		pbsData.specular += data.specular; \
+	}
+
+#endif
+	
 #else //!PER_PIXEL_LIGHTING
 
 ////////////////////////////////////////
@@ -348,10 +363,9 @@ VertexOutput vert(VertexInput input)
 	
 	//Just pack full lighting
 	float3 viewNormal = calculateSpriteViewNormal(input);
-	
 	//Get Ambient diffuse
 	float3 normalWorld = calculateSpriteWorldNormal(input);
-	fixed3 ambient = calculateAmbientLight(normalWorld);
+	fixed3 ambient = calculateAmbientLight(normalWorld);	
 	
 	fixed3 diffuse = calculateLightDiffuse(0, viewPos, viewNormal);
 	diffuse += calculateLightDiffuse(1, viewPos, viewNormal);
@@ -389,11 +403,29 @@ fixed4 frag(VertexOutput input) : SV_Target
 	//Get Ambient diffuse
 	fixed3 ambient = calculateAmbientLight(normalWorld);
 	
+	half3 normalView = normalize(mul((float3x3)UNITY_MATRIX_V, normalWorld));
+	
+#if defined(_SPECULAR) || defined(_SPECULAR_GLOSSMAP)
+
+	SpecularCommonData specData = SpecularSetup(input.texcoord.xy, texureColor, input.color);
+	
+	PBSData psbData = (PBSData)0;
+	ADD_VERTEX_LIGHT_SPEC(0, input, normalView, specData, psbData, ambient, unity_IndirectSpecColor.rgb)
+	ADD_VERTEX_LIGHT_SPEC(1, input, normalView, specData, psbData, fixed3(0,0,0), fixed3(0,0,0))
+	ADD_VERTEX_LIGHT_SPEC(2, input, normalView, specData, psbData, fixed3(0,0,0), fixed3(0,0,0))
+	ADD_VERTEX_LIGHT_SPEC(3, input, normalView, specData, psbData, fixed3(0,0,0), fixed3(0,0,0))
+	
+	fixed4 pixel = calculateLitPixel(fixed4(specData.diffColor, specData.alpha), psbData.lighting);
+	pixel.rgb += psbData.specular;
+	
+	APPLY_EMISSION_SPECULAR(pixel, input.texcoord)
+	
+#else
+		
 	//Find vertex light diffuse
 	fixed3 diffuse = fixed3(0,0,0);
 	
 	//Add each vertex light to diffuse
-	half3 normalView = normalize(mul((float3x3)UNITY_MATRIX_V, normalWorld));
 	ADD_VERTEX_LIGHT(0, input, normalView, diffuse)
 	ADD_VERTEX_LIGHT(1, input, normalView, diffuse)
 	ADD_VERTEX_LIGHT(2, input, normalView, diffuse)
@@ -404,6 +436,8 @@ fixed4 frag(VertexOutput input) : SV_Target
 	APPLY_EMISSION(lighting, input.texcoord.xy)
 
 	fixed4 pixel = calculateLitPixel(texureColor, input.color, lighting);
+	
+#endif
 	
 #if defined(_RIM_LIGHTING)
 	pixel.rgb = applyRimLighting(input.posWorld, normalWorld, pixel);

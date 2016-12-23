@@ -41,9 +41,6 @@ public class SpriteShaderGUI : ShaderGUI
 	private MaterialProperty _mainTexture = null;
 	private MaterialProperty _color = null;
 	
-	private MaterialProperty _emissionMap = null;
-	private MaterialProperty _emissionColor = null;
-	private MaterialProperty _emissionPower = null;
 
 	private MaterialProperty _writeToDepth = null;
 	private MaterialProperty _depthAlphaCutoff = null;
@@ -65,7 +62,16 @@ public class SpriteShaderGUI : ShaderGUI
 	
 	private MaterialProperty _blendTexture = null;
 	private MaterialProperty _blendTextureLerp = null;
-	
+
+	private MaterialProperty _emissionMap = null;
+	private MaterialProperty _emissionColor = null;
+	private MaterialProperty _emissionPower = null;
+
+	private MaterialProperty _metallic = null;
+	private MaterialProperty _metallicGlossMap = null;
+	private MaterialProperty _smoothness = null;
+	private MaterialProperty _smoothnessScale = null;
+
 	#region ShaderGUI
 	public override void OnGUI(MaterialEditor materialEditor, MaterialProperty[] props)
 	{
@@ -93,10 +99,6 @@ public class SpriteShaderGUI : ShaderGUI
 	{
 		_mainTexture = FindProperty("_MainTex", props);
 		_color = FindProperty("_Color", props);
-		
-		_emissionMap = FindProperty("_EmissionMap", props, false);
-		_emissionColor = FindProperty("_EmissionColor", props, false);
-		_emissionPower = FindProperty("_EmissionPower", props, false);		
 
 		_writeToDepth = FindProperty("_ZWrite", props);
 		_depthAlphaCutoff = FindProperty("_Cutoff", props);
@@ -117,6 +119,15 @@ public class SpriteShaderGUI : ShaderGUI
 
 		_rimPower = FindProperty("_RimPower", props, false);
 		_rimColor = FindProperty("_RimColor", props, false);
+
+		_emissionMap = FindProperty("_EmissionMap", props, false);
+		_emissionColor = FindProperty("_EmissionColor", props, false);
+		_emissionPower = FindProperty("_EmissionPower", props, false);
+
+		_metallic = FindProperty("_Metallic", props, false);
+		_metallicGlossMap = FindProperty("_MetallicGlossMap", props, false);
+		_smoothness = FindProperty("_Glossiness", props, false);
+		_smoothnessScale = FindProperty("_GlossMapScale", props, false);
 	}
 
 	protected virtual void ShaderPropertiesGUI()
@@ -176,6 +187,14 @@ public class SpriteShaderGUI : ShaderGUI
 				GUILayout.Label("Emission", EditorStyles.boldLabel);
 				{
 					dataChanged |= RenderEmissionProperties();
+				}
+			}
+
+			if (_metallic != null)
+			{
+				GUILayout.Label("Specular", EditorStyles.boldLabel);
+				{
+					dataChanged |= RenderSpecularProperties();
 				}
 			}
 
@@ -472,6 +491,54 @@ public class SpriteShaderGUI : ShaderGUI
 		return dataChanged;
 	}
 
+	protected virtual bool RenderSpecularProperties()
+	{
+		bool dataChanged = false;
+
+		bool mixedSpecularValue;
+		bool specular = IsKeywordEnabled(_materialEditor, "_SPECULAR", out mixedSpecularValue);
+		bool mixedSpecularGlossMapValue;
+		bool specularGlossMap = IsKeywordEnabled(_materialEditor, "_SPECULAR_GLOSSMAP", out mixedSpecularGlossMapValue);
+		bool mixedValue = mixedSpecularValue || mixedSpecularGlossMapValue;
+
+		EditorGUI.BeginChangeCheck();
+		EditorGUI.showMixedValue = mixedValue;
+		bool specularEnabled = EditorGUILayout.Toggle("Enable Specular", specular || specularGlossMap);
+		EditorGUI.showMixedValue = false;
+		if (EditorGUI.EndChangeCheck())
+		{
+			foreach (Material material in _materialEditor.targets)
+			{
+				bool hasGlossMap = material.GetTexture("_MetallicGlossMap") != null;
+				SetKeyword(material, "_SPECULAR", specularEnabled && !hasGlossMap);
+				SetKeyword(material, "_SPECULAR_GLOSSMAP", specularEnabled && hasGlossMap);
+			}
+
+			mixedValue = false;
+			dataChanged = true;
+		}
+
+		if (specularEnabled && !mixedValue)
+		{
+			EditorGUI.BeginChangeCheck();
+			bool hasGlossMap = _metallicGlossMap.textureValue != null;
+			_materialEditor.TexturePropertySingleLine(new GUIContent("Metallic Gloss Map"), _metallicGlossMap, hasGlossMap ? null : _metallic);
+			if (EditorGUI.EndChangeCheck())
+			{
+				hasGlossMap = _metallicGlossMap.textureValue != null;
+				SetKeyword(_materialEditor, "_SPECULAR", !hasGlossMap);
+				SetKeyword(_materialEditor, "_SPECULAR_GLOSSMAP", hasGlossMap);
+
+				dataChanged = true;
+			}
+
+			int indentation = 2;
+			_materialEditor.ShaderProperty(hasGlossMap ? _smoothnessScale : _smoothness, "Smoothness", indentation);
+		}
+
+		return dataChanged;
+	}
+
 	protected virtual bool RenderEmissionProperties()
 	{
 		bool dataChanged = false;
@@ -548,8 +615,11 @@ public class SpriteShaderGUI : ShaderGUI
 		SetBlendMode(material, eBlendMode.PreMultipliedAlpha);
 		//Start with fixed normal by default
 		SetKeyword(material, "_FIXED_NORMALS", true);
-		//Start with spherical harmonics enabled?
-		SetKeyword(material, "_SPHERICAL_HARMONICS", true);
+		//Start with spherical harmonics disabled?
+		SetKeyword(material, "_SPHERICAL_HARMONICS", false);
+		//Start with specular disabled
+		SetKeyword(material, "_SPECULAR", false);
+		SetKeyword(material, "_SPECULAR_GLOSSMAP", false);
 	}
 
 	private static void SetRenderQueue(Material material, string queue)
@@ -584,7 +654,7 @@ public class SpriteShaderGUI : ShaderGUI
 
 		eBlendMode blendMode = GetMaterialBlendMode(material);
 		SetBlendMode(material, blendMode);
-		
+
 		bool alphaDepthWrite = !zWrite && (blendMode == eBlendMode.StandardAlpha || blendMode == eBlendMode.PreMultipliedAlpha);
 		material.SetOverrideTag("AlphaDepth", alphaDepthWrite ? "True" : "False");
 	}

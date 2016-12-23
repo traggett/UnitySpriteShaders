@@ -10,10 +10,15 @@ Shader "Sprite (Vertex Lit)"
 		_EmissionMap("Emission", 2D) = "white" {}
 		_EmissionPower("Emission Power", Float) = 2.0	
 		
+		_Glossiness("Smoothness", Range(0.0, 1.0)) = 0.5
+		_GlossMapScale("Smoothness Scale", Range(0.0, 1.0)) = 1.0
+		[Gamma] _Metallic("Metallic", Range(0.0, 1.0)) = 0.0
+		_MetallicGlossMap("Metallic", 2D) = "white" {}
+		
 		_DiffuseRamp ("Diffuse Ramp Texture", 2D) = "gray" {}
 		
 		_FixedNormal ("Fixed Normal", Vector) = (0,0,-1,1)
-		_ZWrite ("Depth Write", Float) = 0.0
+		[ToggleOff] _ZWrite ("Depth Write", Float) = 0.0
 		_Cutoff ("Depth alpha cutoff", Range(0,1)) = 0.0
 		_ShadowAlphaCutoff ("Shadow alpha cutoff", Range(0,1)) = 0.1
 		
@@ -56,6 +61,7 @@ Shader "Sprite (Vertex Lit)"
 				#pragma shader_feature _NORMALMAP
 				#pragma shader_feature _ _FIXED_NORMALS _FIXED_NORMALS_BACK_RENDERING
 				#pragma shader_feature _ALPHA_CLIP
+				#pragma shader_feature _ _SPECULAR _SPECULAR_GLOSSMAP
 				#pragma shader_feature _EMISSION
 				#pragma shader_feature _DIFFUSE_RAMP
 				#pragma shader_feature _COLOR_ADJUST

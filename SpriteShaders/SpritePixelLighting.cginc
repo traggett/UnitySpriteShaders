@@ -49,7 +49,7 @@ struct VertexOutput
 
 uniform fixed4 _LightColor0;
 
-inline fixed3 calculateLightDiffuse(VertexOutput input, float3 normalWorld)
+inline fixed3 calculateLightDiffuse(VertexOutput input, float3 normalWorld, inout fixed4 albedo)
 {
 	//For directional lights _WorldSpaceLightPos0.w is set to zero
 	float3 lightWorldDirection = normalize(_WorldSpaceLightPos0.xyz - input.posWorld.xyz * _WorldSpaceLightPos0.w);
@@ -92,9 +92,9 @@ fixed3 calculateVertexLighting(float3 posWorld, float3 normalWorld)
 fixed3 calculateAmbientLight(half3 normalWorld)
 {
 #if defined(_SPHERICAL_HARMONICS)
-	fixed3 ambient = ShadeSH9(half4(normalWorld, 1.0)) * 0.75f;
+	fixed3 ambient = ShadeSH9(half4(normalWorld, 1.0));
 #else 
-	fixed3 ambient = unity_AmbientSky.rgb * 0.75;
+	fixed3 ambient = unity_AmbientSky.rgb;
 #endif
 	return ambient;
 }
@@ -142,9 +142,24 @@ fixed4 fragBase(VertexOutput input) : SV_Target
 
 	//Get Ambient diffuse
 	fixed3 ambient = calculateAmbientLight(normalWorld);
+
 	
+#if defined(_SPECULAR) || defined(_SPECULAR_GLOSSMAP)
+	
+	//For directional lights _WorldSpaceLightPos0.w is set to zero
+	float3 lightWorldDirection = normalize(_WorldSpaceLightPos0.xyz - input.posWorld.xyz * _WorldSpaceLightPos0.w);
+	float attenuation = LIGHT_ATTENUATION(input);
+	
+	//Returns pixel lit by light, texture color should inlcluded alpha
+	half3 viewDir = normalize(_WorldSpaceCameraPos - input.posWorld.xyz);
+	fixed4 pixel = calculateSpecular(SpecularSetup(input.texcoord.xy, texureColor, input.color), viewDir, normalWorld, lightWorldDirection, _LightColor0.rgb * attenuation, ambient + input.vertexLighting);
+	
+	APPLY_EMISSION_SPECULAR(pixel, input.texcoord)
+	
+#else
+
 	//Get primary pixel light diffuse
-	fixed3 diffuse = calculateLightDiffuse(input, normalWorld);
+	fixed3 diffuse = calculateLightDiffuse(input, normalWorld, texureColor);
 	
 	//Combine along with vertex lighting for the base lighting pass
 	fixed3 lighting = ambient + diffuse + input.vertexLighting;
@@ -152,6 +167,8 @@ fixed4 fragBase(VertexOutput input) : SV_Target
 	APPLY_EMISSION(lighting, input.texcoord)
 	
 	fixed4 pixel = calculateLitPixel(texureColor, input.color, lighting);
+	
+#endif
 	
 #if defined(_RIM_LIGHTING)
 	pixel.rgb = applyRimLighting(input.posWorld, normalWorld, pixel);
@@ -175,11 +192,23 @@ fixed4 fragAdd(VertexOutput input) : SV_Target
 	
 	//Get normal direction
 	fixed3 normalWorld = calculateNormalWorld(input);
-
-	//Get light diffuse
-	fixed3 lighting = calculateLightDiffuse(input, normalWorld);
+		
+#if defined(_SPECULAR) || defined(_SPECULAR_GLOSSMAP)
 	
+	//For directional lights _WorldSpaceLightPos0.w is set to zero
+	float3 lightWorldDirection = normalize(_WorldSpaceLightPos0.xyz - input.posWorld.xyz * _WorldSpaceLightPos0.w);
+	float attenuation = LIGHT_ATTENUATION(input);
+	
+	half3 viewDir = normalize(_WorldSpaceCameraPos - input.posWorld.xyz);
+	fixed4 pixel = calculateSpecularAdditive(SpecularSetup(input.texcoord.xy, texureColor, input.color), viewDir, normalWorld, lightWorldDirection, _LightColor0.rgb * attenuation);
+	
+#else
+	
+	//Get light diffuse
+	fixed3 lighting = calculateLightDiffuse(input, normalWorld, texureColor);
 	fixed4 pixel = calculateAdditiveLitPixel(texureColor, input.color, lighting);
+	
+#endif
 	
 	COLORISE_ADDITIVE(pixel)
 	APPLY_FOG_ADDITIVE(pixel, input)
