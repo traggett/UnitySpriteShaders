@@ -90,10 +90,10 @@ inline half3 calculateWorldTangent(float4 tangent)
 	return UnityObjectToWorldDir(tangent);
 }
 
-inline half3 calculateWorldBinormal(half3 normalWorld, half3 tangentWorld, float tangentW)
+inline half3 calculateWorldBinormal(half3 normalWorld, half3 tangentWorld, float tangentSign)
 {
-	// For odd-negative scale transforms we need to flip the binormal
-	return cross(normalWorld, tangentWorld.xyz) * tangentW * unity_WorldTransformParams.w;
+	half sign = tangentSign * unity_WorldTransformParams.w;
+	return cross(normalWorld, tangentWorld) * sign;
 }
 
 inline half3 calculateNormalFromBumpMap(float2 texUV, half3 tangentWorld, half3 binormalWorld, half3 normalWorld)

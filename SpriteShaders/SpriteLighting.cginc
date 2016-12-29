@@ -67,19 +67,21 @@ inline half3 calculateSpriteViewNormal(VertexInput vertex)
 
 #if defined(_NORMALMAP)
 
-inline half3 calculateSpriteWorldBinormal(half3 normalWorld, half3 tangentWorld, float tangentW)
+inline half3 calculateSpriteWorldBinormal(half3 normalWorld, half3 tangentWorld, float tangentSign)
 {
+	//If we're using fixed normals and sprite is facing away from camera, flip tangentSign
 #if defined(_FIXED_NORMALS_BACK_RENDERING)
-	//If we're using fixed normals and sprite is facing away from camera, flip tangentW
 	float3 zAxis = float3(0.0, 0.0, 1.0);
-	float3 modelForward = mul((float3x3)unity_ObjectToWorld, zAxis);
-	float3 cameraForward = mul((float3x3)UNITY_MATRIX_VP, zAxis);
-	float directionDot = dot(modelForward, cameraForward);
-	//Don't worry if directionDot is zero, sprite will be side on to camera so invisible meaning it doesnt matter that tangentW will be zero too 
-	tangentW *= sign(directionDot);
+	//Find models camera-space z-axis (must be a more efficant way of doing this?)
+	float3 modelWorldSpaceZaxis = mul((float3x3)unity_ObjectToWorld, zAxis);
+	float3 modelCameraSpaceZaxis = mul((float3x3)UNITY_MATRIX_VP, modelWorldSpaceZaxis);
+	//Find dot of model z-axis and camera z-axis
+	float directionDot = dot(zAxis, modelCameraSpaceZaxis);
+	//Don't worry if directionDot is zero, sprite will be side on to camera so invisible meaning it doesnt matter that tangentSign will be zero too 
+	tangentSign *= -sign(directionDot);
 #endif // _FIXED_NORMALS_BACK_RENDERING
 
-	return calculateWorldBinormal(normalWorld, tangentWorld, tangentW);
+	return calculateWorldBinormal(normalWorld, tangentWorld, tangentSign);
 }
 
 #endif // _NORMALMAP
