@@ -141,7 +141,7 @@ inline fixed4 calculateLitPixel(fixed4 texureColor, fixed4 color, fixed3 lightin
 	finalPixel = texureColor * color;
 	finalPixel.rgb *= lighting * finalPixel.a;
 #else 
-	// Solid
+	//Opaque
 	finalPixel.a = 1;
 	finalPixel.rgb = texureColor.rgb * color.rgb * lighting;
 #endif
@@ -180,7 +180,7 @@ inline fixed4 calculateLitPixel(fixed4 texureColor, fixed3 lighting) : SV_Target
 	finalPixel = texureColor;
 	finalPixel.rgb *= lighting * finalPixel.a;
 #else 
-	// Solid
+	//Opaque
 	finalPixel.a = 1;
 	finalPixel.rgb = texureColor.rgb * lighting;
 #endif
@@ -201,7 +201,7 @@ inline fixed4 calculateAdditiveLitPixel(fixed4 texureColor, fixed4 color, fixed3
 	finalPixel.rgb = texureColor.rgb * lighting * color.rgb * color.a;
 	finalPixel.a = 1.0;
 #else
-	//Solid
+	//Opaque
 	finalPixel.rgb = texureColor.rgb * lighting * color.rgb;
 	finalPixel.a = 1.0;
 #endif
@@ -218,7 +218,7 @@ inline fixed4 calculateAdditiveLitPixel(fixed4 texureColor, fixed3 lighting) : S
 	finalPixel.rgb = (texureColor.rgb * lighting) * texureColor.a;
 	finalPixel.a = 1.0;
 #else
-	//Pre multiplied alpha and Solid
+	//Pre multiplied alpha and Opaque
 	finalPixel.rgb = texureColor.rgb * lighting;
 	finalPixel.a = 1.0;
 #endif
@@ -255,7 +255,7 @@ inline fixed4 calculatePixel(fixed4 texureColor, fixed4 color) : SV_Target
 	finalPixel = color * texureColor;
 	finalPixel.rgb *= finalPixel.a;
 #else 
-	// Solid
+	//Opaque
 	finalPixel.a = 1;
 	finalPixel.rgb = texureColor.rgb * color.rgb;
 #endif
@@ -291,7 +291,7 @@ inline fixed4 calculatePixel(fixed4 texureColor) : SV_Target
 	finalPixel = texureColor;
 	finalPixel.rgb *= finalPixel.a;
 #else
-	//Solid
+	//Opaque
 	finalPixel.a = 1;
 	finalPixel.rgb = texureColor.rgb;
 #endif 
@@ -399,7 +399,7 @@ inline fixed4 applyFog(fixed4 pixel, float1 fogCoord)
 	//In alpha blended modes blend to fog color based on pixel alpha
 	fixed4 fogColor = lerp(fixed4(0,0,0,0), unity_FogColor, pixel.a);
 #else
-	//In solid mode just return fog color;
+	//In opaque mode just return fog color;
 	fixed4 fogColor = unity_FogColor;
 #endif 
 	

@@ -15,7 +15,7 @@ public class SpriteShaderGUI : ShaderGUI
 	{
 		PreMultipliedAlpha,
 		StandardAlpha,
-		Solid,
+		Opaque,
 		Additive,
 		SoftAdditive,
 		Multiply,
@@ -359,7 +359,7 @@ public class SpriteShaderGUI : ShaderGUI
 			dataChanged = true;
 		}
 		
-		if (writeTodepth && !mixedValue && GetMaterialBlendMode((Material)_materialEditor.target) != eBlendMode.Solid) 
+		if (writeTodepth && !mixedValue && GetMaterialBlendMode((Material)_materialEditor.target) != eBlendMode.Opaque) 
 		{
 			EditorGUI.BeginChangeCheck();
 			_materialEditor.RangeProperty(_depthAlphaCutoff, "Depth Alpha Cutoff");
@@ -645,7 +645,7 @@ public class SpriteShaderGUI : ShaderGUI
 		SetBlendMode(material, blendMode);
 
 		bool zWrite = material.GetFloat("_ZWrite") > 0.0f;
-		bool clipAlpha = zWrite && blendMode != eBlendMode.Solid && material.GetFloat("_Cutoff") > 0.0f;
+		bool clipAlpha = zWrite && blendMode != eBlendMode.Opaque && material.GetFloat("_Cutoff") > 0.0f;
 		SetKeyword(material, "_ALPHA_CLIP", clipAlpha);
 
 		bool alphaDepthWrite = !zWrite && (blendMode == eBlendMode.StandardAlpha || blendMode == eBlendMode.PreMultipliedAlpha);
@@ -731,7 +731,7 @@ public class SpriteShaderGUI : ShaderGUI
 		if (material.IsKeywordEnabled("_ADDITIVEBLEND_SOFT"))
 			return eBlendMode.SoftAdditive;
 
-		return eBlendMode.Solid;
+		return eBlendMode.Opaque;
 	}
 
 	private static void SetBlendMode(Material material, eBlendMode blendMode)
@@ -747,7 +747,7 @@ public class SpriteShaderGUI : ShaderGUI
 
 		switch (blendMode)
 		{
-			case eBlendMode.Solid:
+			case eBlendMode.Opaque:
 				{
 					material.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.One);
 					material.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.Zero);
