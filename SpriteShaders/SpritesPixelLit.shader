@@ -56,7 +56,7 @@ Shader "Sprite (Pixel Lit)"
 			CGPROGRAM
 				#pragma target 3.0
 				
-				#pragma shader_feature _ _ALPHAPREMULTIPLY_ON _ADDITIVEBLEND _ADDITIVEBLEND_SOFT _MULTIPLYBLEND _MULTIPLYBLEND_X2
+				#pragma shader_feature _ _ALPHABLEND_ON _ALPHAPREMULTIPLY_ON _ADDITIVEBLEND _ADDITIVEBLEND_SOFT _MULTIPLYBLEND _MULTIPLYBLEND_X2
 				#pragma shader_feature _NORMALMAP
 				#pragma shader_feature _ _FIXED_NORMALS _FIXED_NORMALS_BACK_RENDERING
 				#pragma shader_feature _ALPHA_CLIP
@@ -91,7 +91,7 @@ Shader "Sprite (Pixel Lit)"
 			CGPROGRAM
 				#pragma target 3.0
 				
-				#pragma shader_feature _ _ALPHAPREMULTIPLY_ON _ADDITIVEBLEND _ADDITIVEBLEND_SOFT _MULTIPLYBLEND _MULTIPLYBLEND_X2
+				#pragma shader_feature _ _ALPHABLEND_ON _ALPHAPREMULTIPLY_ON _ADDITIVEBLEND _ADDITIVEBLEND_SOFT _MULTIPLYBLEND _MULTIPLYBLEND_X2
 				#pragma shader_feature _NORMALMAP
 				#pragma shader_feature _ _FIXED_NORMALS _FIXED_NORMALS_BACK_RENDERING
 				#pragma shader_feature _ALPHA_CLIP

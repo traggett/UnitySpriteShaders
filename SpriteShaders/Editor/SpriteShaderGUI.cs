@@ -358,8 +358,8 @@ public class SpriteShaderGUI : ShaderGUI
 			mixedValue = false;
 			dataChanged = true;
 		}
-
-		if (writeTodepth && !mixedValue)
+		
+		if (writeTodepth && !mixedValue && GetMaterialBlendMode((Material)_materialEditor.target) != eBlendMode.Solid) 
 		{
 			EditorGUI.BeginChangeCheck();
 			_materialEditor.RangeProperty(_depthAlphaCutoff, "Depth Alpha Cutoff");
@@ -620,6 +620,8 @@ public class SpriteShaderGUI : ShaderGUI
 		//Start with specular disabled
 		SetKeyword(material, "_SPECULAR", false);
 		SetKeyword(material, "_SPECULAR_GLOSSMAP", false);
+		//Start with Culling disabled
+		SetInt("_Cull", (int)eCulling.Off);
 	}
 
 	private static void SetRenderQueue(Material material, string queue)
@@ -639,24 +641,24 @@ public class SpriteShaderGUI : ShaderGUI
 
 	private static void SetMaterialKeywords(Material material)
 	{
-		bool normalMap = material.HasProperty("_BumpMap") && material.GetTexture("_BumpMap") != null;
-		SetKeyword (material, "_NORMALMAP", normalMap);
+		eBlendMode blendMode = GetMaterialBlendMode(material);
+		SetBlendMode(material, blendMode);
 
 		bool zWrite = material.GetFloat("_ZWrite") > 0.0f;
-		bool clipAlpha = zWrite && material.GetFloat("_Cutoff") > 0.0f;
+		bool clipAlpha = zWrite && blendMode != eBlendMode.Solid && material.GetFloat("_Cutoff") > 0.0f;
 		SetKeyword(material, "_ALPHA_CLIP", clipAlpha);
+
+		bool alphaDepthWrite = !zWrite && (blendMode == eBlendMode.StandardAlpha || blendMode == eBlendMode.PreMultipliedAlpha);
+		material.SetOverrideTag("AlphaDepth", alphaDepthWrite ? "True" : "False");
+
+		bool normalMap = material.HasProperty("_BumpMap") && material.GetTexture("_BumpMap") != null;
+		SetKeyword (material, "_NORMALMAP", normalMap);
 
 		bool diffuseRamp = material.HasProperty("_DiffuseRamp") && material.GetTexture("_DiffuseRamp") != null;
 		SetKeyword(material, "_DIFFUSE_RAMP", diffuseRamp);
 
 		bool blendTexture = material.HasProperty("_BlendTex") && material.GetTexture("_BlendTex") != null;
 		SetKeyword(material, "_TEXTURE_BLEND", blendTexture);
-
-		eBlendMode blendMode = GetMaterialBlendMode(material);
-		SetBlendMode(material, blendMode);
-
-		bool alphaDepthWrite = !zWrite && (blendMode == eBlendMode.StandardAlpha || blendMode == eBlendMode.PreMultipliedAlpha);
-		material.SetOverrideTag("AlphaDepth", alphaDepthWrite ? "True" : "False");
 	}
 
 	private static void MaterialChanged(MaterialEditor materialEditor)
@@ -716,6 +718,8 @@ public class SpriteShaderGUI : ShaderGUI
 
 	private static eBlendMode GetMaterialBlendMode(Material material)
 	{
+		if (material.IsKeywordEnabled("_ALPHABLEND_ON"))
+			return eBlendMode.StandardAlpha;
 		if (material.IsKeywordEnabled("_ALPHAPREMULTIPLY_ON"))
 			return eBlendMode.PreMultipliedAlpha;
 		if (material.IsKeywordEnabled("_MULTIPLYBLEND"))
@@ -726,14 +730,13 @@ public class SpriteShaderGUI : ShaderGUI
 			return eBlendMode.Additive;
 		if (material.IsKeywordEnabled("_ADDITIVEBLEND_SOFT"))
 			return eBlendMode.SoftAdditive;
-		if (material.GetInt("_DstBlend") == (int)UnityEngine.Rendering.BlendMode.Zero)
-			return eBlendMode.Solid;
 
-		return eBlendMode.StandardAlpha;
+		return eBlendMode.Solid;
 	}
 
 	private static void SetBlendMode(Material material, eBlendMode blendMode)
 	{
+		SetKeyword(material, "_ALPHABLEND_ON", blendMode == eBlendMode.StandardAlpha);
 		SetKeyword(material, "_ALPHAPREMULTIPLY_ON", blendMode == eBlendMode.PreMultipliedAlpha);
 		SetKeyword(material, "_MULTIPLYBLEND", blendMode == eBlendMode.Multiply);
 		SetKeyword(material, "_MULTIPLYBLEND_X2", blendMode == eBlendMode.Multiplyx2);

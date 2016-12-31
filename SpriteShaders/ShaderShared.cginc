@@ -114,7 +114,11 @@ inline fixed4 calculateLitPixel(fixed4 texureColor, fixed4 color, fixed3 lightin
 {
 	fixed4 finalPixel;
 	
-#if defined(_ALPHAPREMULTIPLY_ON)
+#if defined(_ALPHABLEND_ON)
+	//Normal Alpha
+	finalPixel.a = texureColor.a * color.a;
+	finalPixel.rgb = texureColor.rgb * color.rgb * (lighting * finalPixel.a);
+#elif defined(_ALPHAPREMULTIPLY_ON)
 	//Pre multiplied alpha
 	finalPixel = texureColor * color;
 	finalPixel.rgb *= lighting * color.a;
@@ -136,9 +140,10 @@ inline fixed4 calculateLitPixel(fixed4 texureColor, fixed4 color, fixed3 lightin
 	//Additive soft
 	finalPixel = texureColor * color;
 	finalPixel.rgb *= lighting * finalPixel.a;
-#else
-	finalPixel.a = texureColor.a * color.a;
-	finalPixel.rgb = texureColor.rgb * color.rgb * (lighting * finalPixel.a);
+#else 
+	// Solid
+	finalPixel.a = 1;
+	finalPixel.rgb = texureColor.rgb * color.rgb * lighting;
 #endif
 	
 	return finalPixel;
@@ -148,7 +153,11 @@ inline fixed4 calculateLitPixel(fixed4 texureColor, fixed3 lighting) : SV_Target
 {
 	fixed4 finalPixel;
 	
-#if defined(_ALPHAPREMULTIPLY_ON)
+#if defined(_ALPHABLEND_ON)	
+	//Normal Alpha
+	finalPixel.a = texureColor.a;
+	finalPixel.rgb = texureColor.rgb * (lighting * finalPixel.a);
+#elif defined(_ALPHAPREMULTIPLY_ON)
 	//Pre multiplied alpha
 	finalPixel = texureColor;
 	finalPixel.rgb *= lighting;
@@ -170,9 +179,10 @@ inline fixed4 calculateLitPixel(fixed4 texureColor, fixed3 lighting) : SV_Target
 	//Additive soft
 	finalPixel = texureColor;
 	finalPixel.rgb *= lighting * finalPixel.a;
-#else
-	finalPixel.a = texureColor.a;
-	finalPixel.rgb = texureColor.rgb * (lighting * finalPixel.a);
+#else 
+	// Solid
+	finalPixel.a = 1;
+	finalPixel.rgb = texureColor.rgb * lighting;
 #endif
 	
 	return finalPixel;
@@ -182,13 +192,17 @@ inline fixed4 calculateAdditiveLitPixel(fixed4 texureColor, fixed4 color, fixed3
 {
 	fixed4 finalPixel;
 	
-#if defined(_ALPHAPREMULTIPLY_ON)
+#if defined(_ALPHABLEND_ON)	|| defined(_MULTIPLYBLEND)	|| defined(_MULTIPLYBLEND_X2) || defined(_ADDITIVEBLEND) || defined(_ADDITIVEBLEND_SOFT)
+	//Normal Alpha, Additive and Multiply modes
+	finalPixel.rgb = (texureColor.rgb * lighting * color.rgb) * (texureColor.a * color.a);
+	finalPixel.a = 1.0;
+#elif defined(_ALPHAPREMULTIPLY_ON)
 	//Pre multiplied alpha
 	finalPixel.rgb = texureColor.rgb * lighting * color.rgb * color.a;
 	finalPixel.a = 1.0;
 #else
-	//All other alpha
-	finalPixel.rgb = (texureColor.rgb * lighting * color.rgb) * (texureColor.a * color.a);
+	//Solid
+	finalPixel.rgb = texureColor.rgb * lighting * color.rgb;
 	finalPixel.a = 1.0;
 #endif
 	
@@ -199,13 +213,13 @@ inline fixed4 calculateAdditiveLitPixel(fixed4 texureColor, fixed3 lighting) : S
 {
 	fixed4 finalPixel;
 	
-#if defined(_ALPHAPREMULTIPLY_ON)
-	//Pre multiplied alpha
-	finalPixel.rgb = texureColor.rgb * lighting;
+#if defined(_ALPHABLEND_ON)	|| defined(_MULTIPLYBLEND) || defined(_MULTIPLYBLEND_X2) || defined(_ADDITIVEBLEND) || defined(_ADDITIVEBLEND_SOFT)
+	//Normal Alpha, Additive and Multiply modes
+	finalPixel.rgb = (texureColor.rgb * lighting) * texureColor.a;
 	finalPixel.a = 1.0;
 #else
-	//All other alpha
-	finalPixel.rgb = (texureColor.rgb * lighting) * (texureColor.a);
+	//Pre multiplied alpha and Solid
+	finalPixel.rgb = texureColor.rgb * lighting;
 	finalPixel.a = 1.0;
 #endif
 	
@@ -216,7 +230,11 @@ inline fixed4 calculatePixel(fixed4 texureColor, fixed4 color) : SV_Target
 {
 	fixed4 finalPixel;
 	
-#if defined(_ALPHAPREMULTIPLY_ON)
+#if defined(_ALPHABLEND_ON)	
+	//Normal Alpha
+	finalPixel.a = texureColor.a * color.a;
+	finalPixel.rgb = (texureColor.rgb * color.rgb) * finalPixel.a;
+#elif defined(_ALPHAPREMULTIPLY_ON)
 	//Pre multiplied alpha
 	finalPixel = texureColor * color;
 	finalPixel.rgb *= color.a;
@@ -236,11 +254,11 @@ inline fixed4 calculatePixel(fixed4 texureColor, fixed4 color) : SV_Target
 	//Additive soft
 	finalPixel = color * texureColor;
 	finalPixel.rgb *= finalPixel.a;
-#else
-	//Standard alpha
-	finalPixel.a = texureColor.a * color.a;
-	finalPixel.rgb = (texureColor.rgb * color.rgb) * finalPixel.a;
-#endif 
+#else 
+	// Solid
+	finalPixel.a = 1;
+	finalPixel.rgb = texureColor.rgb * color.rgb;
+#endif
 	
 	return finalPixel;
 }
@@ -249,7 +267,11 @@ inline fixed4 calculatePixel(fixed4 texureColor) : SV_Target
 {
 	fixed4 finalPixel;
 	
-#if defined(_ALPHAPREMULTIPLY_ON)
+#if defined(_ALPHABLEND_ON)	
+	//Normal Alpha
+	finalPixel.a = texureColor.a;
+	finalPixel.rgb = texureColor.rgb * finalPixel.a;
+#elif defined(_ALPHAPREMULTIPLY_ON)
 	//Pre multiplied alpha
 	finalPixel = texureColor;
 #elif defined(_MULTIPLYBLEND)
@@ -269,9 +291,9 @@ inline fixed4 calculatePixel(fixed4 texureColor) : SV_Target
 	finalPixel = texureColor;
 	finalPixel.rgb *= finalPixel.a;
 #else
-	//Standard alpha
-	finalPixel.a = texureColor.a;
-	finalPixel.rgb = texureColor.rgb * finalPixel.a;
+	//Solid
+	finalPixel.a = 1;
+	finalPixel.rgb = texureColor.rgb;
 #endif 
 
 	return finalPixel;
@@ -281,7 +303,7 @@ inline fixed4 calculatePixel(fixed4 texureColor) : SV_Target
 // Alpha Clipping
 //
 
-#if defined(_ALPHA_CLIP)
+#if defined(_ALPHA_CLIP) 
 
 uniform fixed _Cutoff;
 
@@ -373,9 +395,12 @@ inline fixed4 applyFog(fixed4 pixel, float1 fogCoord)
 	//In multipliedx2 mode fade to grey based on inverse luminance
 	float luminance = pixel.r * 0.3 + pixel.g * 0.59 + pixel.b * 0.11;
 	fixed4 fogColor = lerp(fixed4(0.5f,0.5f,0.5f,0.5f), fixed4(0,0,0,0), luminance);
-#else
-	//Otherwise blend to fog color based on pixel alpha
+#elif defined(_ALPHABLEND_ON) || defined(_ALPHAPREMULTIPLY_ON)
+	//In alpha blended modes blend to fog color based on pixel alpha
 	fixed4 fogColor = lerp(fixed4(0,0,0,0), unity_FogColor, pixel.a);
+#else
+	//In solid mode just return fog color;
+	fixed4 fogColor = unity_FogColor;
 #endif 
 	
 	UNITY_APPLY_FOG_COLOR(fogCoord, pixel, fogColor);
