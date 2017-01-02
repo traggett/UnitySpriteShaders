@@ -343,9 +343,13 @@ VertexOutput vert(VertexInput input)
 	float3 viewPos = mul(UNITY_MATRIX_MV, input.vertex);
 
 #if defined(PER_PIXEL_LIGHTING)
+
+#if defined(_RIM_LIGHTING) || defined(_NORMALMAP)
+	float4 posWorld = calculateWorldPos(input.vertex);
+#endif
 	
 	#if defined(_RIM_LIGHTING)
-		output.posWorld = calculateWorldPos(input.vertex);
+		output.posWorld = posWorld;
 	#endif
 
 	PACK_VERTEX_LIGHT(0, output, viewPos)
@@ -357,7 +361,7 @@ VertexOutput vert(VertexInput input)
 	
 	#if defined(_NORMALMAP)
 		output.tangentWorld.xyz = calculateWorldTangent(input.tangent);
-		output.binormalWorld.xyz = calculateSpriteWorldBinormal(output.normalWorld, output.tangentWorld, input.tangent.w);	
+		output.binormalWorld.xyz = calculateSpriteWorldBinormal(input, posWorld, output.normalWorld, output.tangentWorld);	
 	#endif
 	
 #else // !PER_PIXEL_LIGHTING

@@ -137,7 +137,7 @@ VertexOutput vert(VertexInput v)
 	
 #if defined(_NORMALMAP)
 	output.tangentWorld = calculateWorldTangent(v.tangent);
-	output.binormalWorld = calculateSpriteWorldBinormal(output.normalWorld, output.tangentWorld, v.tangent.w);
+	output.binormalWorld = calculateSpriteWorldBinormal(v, output.posWorld, output.normalWorld, output.tangentWorld);
 #endif
 
 	TRANSFER_VERTEX_TO_FRAGMENT(output)

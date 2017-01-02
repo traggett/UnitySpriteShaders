@@ -76,15 +76,15 @@ inline SpecularCommonData getSpecularData (float2 uv, half4 texureColor, fixed4 
 	o.oneMinusReflectivity = oneMinusReflectivity;
 	o.smoothness = smoothness;
 	
-	#if defined(_ALPHAPREMULTIPLY_ON) && (SHADER_TARGET >= 30)
+#if defined(_ALPHAPREMULTIPLY_ON) && (SHADER_TARGET >= 30)
 	// Reflectivity 'removes' from the rest of components, including Transparency
 	// outAlpha = 1-(1-alpha)*(1-reflectivity) = 1-(oneMinusReflectivity - alpha*oneMinusReflectivity) =
 	//          = 1-oneMinusReflectivity + alpha*oneMinusReflectivity
 	//o.alpha = 1-oneMinusReflectivity + albedo.a*oneMinusReflectivity;
 	o.alpha = albedo.a;
-	#else
+#else
 	o.alpha = albedo.a;
-	#endif
+#endif
 	
 	return o;
 }

@@ -17,9 +17,9 @@ struct VertexInput
 	float4 vertex : POSITION;
 	float4 texcoord : TEXCOORD0;
 	float4 color : COLOR;
-#if defined(MESH_NORMALS)
+#if !defined(_FIXED_NORMALS) //_FIXED_NORMALS_BACK_RENDERING needs mesh normal to know which way the sprite is facing
 	float3 normal : NORMAL;
-#endif // MESH_NORMALS
+#endif // _FIXED_NORMALS
 #if defined(_NORMALMAP)
 	float4 tangent : TANGENT;
 #endif // _NORMALMAP
@@ -67,18 +67,18 @@ inline half3 calculateSpriteViewNormal(VertexInput vertex)
 
 #if defined(_NORMALMAP)
 
-inline half3 calculateSpriteWorldBinormal(half3 normalWorld, half3 tangentWorld, float tangentSign)
+inline half3 calculateSpriteWorldBinormal(VertexInput vertex, half4 worldPos, half3 normalWorld, half3 tangentWorld)
 {
-	//If we're using fixed normals and sprite is facing away from camera, flip tangentSign
+	float tangentSign = vertex.tangent.w;
+
 #if defined(_FIXED_NORMALS_BACK_RENDERING)
-	float3 zAxis = float3(0.0, 0.0, 1.0);
-	//Find models camera-space z-axis (must be a more efficant way of doing this?)
-	float3 modelWorldSpaceZaxis = mul((float3x3)unity_ObjectToWorld, zAxis);
-	float3 modelCameraSpaceZaxis = mul((float3x3)UNITY_MATRIX_VP, modelWorldSpaceZaxis);
-	//Find dot of model z-axis and camera z-axis
-	float directionDot = dot(zAxis, modelCameraSpaceZaxis);
-	//Don't worry if directionDot is zero, sprite will be side on to camera so invisible meaning it doesnt matter that tangentSign will be zero too 
-	tangentSign *= -sign(directionDot);
+	//If we're using fixed normals and sprite is facing away from camera, flip tangentSign
+	//To find out if vertex is facing away from camera need its actual normal (not the fixed normal) and the world space vector to the camera
+	float3 meshWorldNormal = calculateWorldNormal(vertex.normal);
+	float3 toCamera = _WorldSpaceCameraPos - worldPos;
+	//Find dot between vector toCamera, if its negative then multiply the tangentSign by -1.
+	float toCameraDot = dot(toCamera, meshWorldNormal);
+	tangentSign *= sign(toCameraDot);
 #endif // _FIXED_NORMALS_BACK_RENDERING
 
 	return calculateWorldBinormal(normalWorld, tangentWorld, tangentSign);
