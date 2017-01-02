@@ -36,6 +36,13 @@ public class SpriteShaderGUI : ShaderGUI
 		Front = 1,
 	};
 
+	private enum eNormalsMode
+	{
+		MeshNormals = -1,
+		FixedNormalsViewSpace = 0,
+		FixedNormalsModelSpace = 1,
+	};
+
 	private MaterialEditor _materialEditor;
 
 	private MaterialProperty _mainTexture = null;
@@ -135,74 +142,70 @@ public class SpriteShaderGUI : ShaderGUI
 		// Use default labelWidth
 		EditorGUIUtility.labelWidth = 0f;
 
+		RenderMeshInfoBox();
+
 		// Detect any changes to the material
-		bool dataChanged = false;
+		bool dataChanged = RenderModes();
 
+		GUILayout.Label("Main Maps", EditorStyles.boldLabel);
 		{
-			{
-				dataChanged |= RenderModes();
-			}
+			dataChanged |= RenderTextureProperties();
+		}
 
-			GUILayout.Label("Main Maps", EditorStyles.boldLabel);
+		if (_metallic != null)
+		{
+			GUILayout.Label("Specular", EditorStyles.boldLabel);
 			{
-				dataChanged |= RenderTextureProperties();
+				dataChanged |= RenderSpecularProperties();
 			}
+		}
 
-			if (_metallic != null)
+		if (_emissionMap != null && _emissionColor != null)
+		{
+			GUILayout.Label("Emission", EditorStyles.boldLabel);
 			{
-				GUILayout.Label("Specular", EditorStyles.boldLabel);
-				{
-					dataChanged |= RenderSpecularProperties();
-				}
+				dataChanged |= RenderEmissionProperties();
 			}
+		}
 
-			if (_emissionMap != null && _emissionColor != null)
-			{
-				GUILayout.Label("Emission", EditorStyles.boldLabel);
-				{
-					dataChanged |= RenderEmissionProperties();
-				}
-			}
+		GUILayout.Label("Depth", EditorStyles.boldLabel);
+		{
+			dataChanged |= RenderDepthProperties();
+		}
 
-			GUILayout.Label("Depth", EditorStyles.boldLabel);
-			{
-				dataChanged |= RenderDepthProperties();
-			}
+		if (_fixedNormal != null)
+		{
+			GUILayout.Label("Normals", EditorStyles.boldLabel);
+			dataChanged |= RenderNormalsProperties();
+		}
 
-			if (_fixedNormal != null)
-			{
-				GUILayout.Label("Normals", EditorStyles.boldLabel);
-				dataChanged |= RenderNormalsProperties();
-			}
+		GUILayout.Label("Shadows", EditorStyles.boldLabel);
+		{
+			dataChanged |= RenderShadowsProperties();
+		}
 
-			GUILayout.Label("Shadows", EditorStyles.boldLabel);
+		if (_fixedNormal != null)
+		{
+			GUILayout.Label("Ambient Spherical Harmonics", EditorStyles.boldLabel);
 			{
-				dataChanged |= RenderShadowsProperties();
+				dataChanged |= RenderSphericalHarmonicsProperties();
 			}
+		}
 
-			if (_fixedNormal != null)
-			{
-				GUILayout.Label("Ambient Spherical Harmonics", EditorStyles.boldLabel);
-				{
-					dataChanged |= RenderSphericalHarmonicsProperties();
-				}
-			}
+		GUILayout.Label("Fog", EditorStyles.boldLabel);
+		{
+			dataChanged |= RenderFogProperties();
+		}
 
-			GUILayout.Label("Fog", EditorStyles.boldLabel);
-			{
-				dataChanged |= RenderFogProperties();
-			}
+		GUILayout.Label("Color Adjustment", EditorStyles.boldLabel);
+		{
+			dataChanged |= RenderColorProperties();
+		}
 
-			GUILayout.Label("Color Adjustment", EditorStyles.boldLabel);
-			{
-				dataChanged |= RenderColorProperties();
-			}
-
-			if (_rimColor != null)
-			{
-				GUILayout.Label("Rim Lighting", EditorStyles.boldLabel);
-				dataChanged |= RenderRimLightingProperties();
-			}
+		if (_rimColor != null)
+		{
+			GUILayout.Label("Rim Lighting", EditorStyles.boldLabel);
+			dataChanged |= RenderRimLightingProperties();
 		}
 
 		if (dataChanged)
@@ -373,51 +376,92 @@ public class SpriteShaderGUI : ShaderGUI
 	{
 		bool dataChanged = false;
 
-		bool mixedNormals, mixedNormalsBackRendering;
-		bool fixedNormals = IsKeywordEnabled(_materialEditor, "_FIXED_NORMALS", out mixedNormals);
-		bool fixedNormalsBackRendering = IsKeywordEnabled(_materialEditor, "_FIXED_NORMALS_BACK_RENDERING", out mixedNormalsBackRendering);
+		eNormalsMode normalsMode = GetMaterialNormalsMode((Material)_materialEditor.target);
+		bool mixedNormalsMode = false;
+		foreach (Material material in _materialEditor.targets)
+		{
+			if (normalsMode != GetMaterialNormalsMode(material))
+			{
+				mixedNormalsMode = true;
+				break;
+			}
+		}
 
 		EditorGUI.BeginChangeCheck();
-
-		EditorGUI.showMixedValue = mixedNormals;
-		bool meshNormals = EditorGUILayout.Toggle(new GUIContent("Use Mesh Normals", "If this is unticked instead of requiring mesh normals a Fixed Normal will be used instead (it's quicker and can result in better looking lighting effects on 2d objects)."), 
-													!fixedNormals && !fixedNormalsBackRendering);
+		EditorGUI.showMixedValue = mixedNormalsMode;
+		bool fixedNormals = EditorGUILayout.Toggle(new GUIContent("Use Fixed Normal", "If this is ticked instead of requiring mesh normals a Fixed Normal will be used instead (it's quicker and can result in better looking lighting effects on 2d objects)."),
+													normalsMode != eNormalsMode.MeshNormals);
 		if (EditorGUI.EndChangeCheck())
 		{
-			SetKeyword(_materialEditor, "_FIXED_NORMALS", meshNormals ? false : fixedNormalsBackRendering ? false : true);
-			SetKeyword(_materialEditor, "_FIXED_NORMALS_BACK_RENDERING", meshNormals ? false : fixedNormalsBackRendering);
-			mixedNormals = false;
+			normalsMode = fixedNormals ? eNormalsMode.FixedNormalsViewSpace : eNormalsMode.MeshNormals;
+			SetNormalsMode(_materialEditor, normalsMode, false);
+			_fixedNormal.vectorValue = new Vector4(0.0f, 0.0f, -1.0f, 1.0f);
+			mixedNormalsMode = false;
 			dataChanged = true;
 		}
-		
-		if (!meshNormals && !mixedNormals)
+
+		if (fixedNormals)
 		{
+			//Show drop down for normals space
+			EditorGUI.BeginChangeCheck();
+			EditorGUI.showMixedValue = mixedNormalsMode;
+			normalsMode = (eNormalsMode)EditorGUILayout.Popup("Fixed Normal Space", (int)normalsMode, new string[]{"ViewSpace", "ModelSpace"});
+			if (EditorGUI.EndChangeCheck())
+			{
+				SetNormalsMode((Material)_materialEditor.target, normalsMode, GetMaterialFixedNormalsBackfaceRenderingOn((Material)_materialEditor.target));
+
+				foreach (Material material in _materialEditor.targets)
+				{
+					SetNormalsMode(material, normalsMode, GetMaterialFixedNormalsBackfaceRenderingOn(material));
+				}
+
+				//Reset fixed normal to default (Vector3.forward for model-space, -Vector3.forward for view-space).
+				_fixedNormal.vectorValue =  new Vector4(0.0f, 0.0f, normalsMode == eNormalsMode.FixedNormalsViewSpace ? -1.0f : 1.0f, 1.0f);
+
+				mixedNormalsMode = false;
+			}
+
+			//Show fixed normal
 			EditorGUI.BeginChangeCheck();
 			EditorGUI.showMixedValue = _fixedNormal.hasMixedValue;
-			Vector3 normal = EditorGUILayout.Vector3Field(new GUIContent("Fixed Normal", "Defined in Camera Space. Should normally be (0,0,-1)."), _fixedNormal.vectorValue);
+			Vector3 normal = EditorGUILayout.Vector3Field(new GUIContent("Fixed Normal Direction", "Should normally be (0,0,-1) if in view-space or (0,0,1) if in model-space."), _fixedNormal.vectorValue);
 			if (EditorGUI.EndChangeCheck())
 			{
 				_fixedNormal.vectorValue = new Vector4(normal.x, normal.y, normal.z, 1.0f);
 				dataChanged = true;
 			}
 
-			EditorGUI.BeginChangeCheck();
-			EditorGUI.showMixedValue = mixedNormalsBackRendering;
-			bool backRendering = EditorGUILayout.Toggle(new GUIContent("Fixed Normal Back Rendering", "Tick only if you are going to rotate the sprite to face away from the camera, the fixed normal will be flipped to compensate."),
-														fixedNormalsBackRendering);
-			if (EditorGUI.EndChangeCheck())
+			//Show adjust for back face rendering
 			{
-				SetKeyword(_materialEditor, "_FIXED_NORMALS_BACK_RENDERING", backRendering);
-				SetKeyword(_materialEditor, "_FIXED_NORMALS", !backRendering);
-				dataChanged = true;
+				bool fixBackFaceRendering = GetMaterialFixedNormalsBackfaceRenderingOn((Material)_materialEditor.target);
+				bool mixedBackFaceRendering = false;
+				foreach (Material material in _materialEditor.targets)
+				{
+					if (fixBackFaceRendering != GetMaterialFixedNormalsBackfaceRenderingOn(material))
+					{
+						mixedBackFaceRendering = true;
+						break;
+					}
+				}
+
+				EditorGUI.BeginChangeCheck();
+				EditorGUI.showMixedValue = mixedBackFaceRendering;
+				bool backRendering = EditorGUILayout.Toggle(new GUIContent("Adjust Backface Tangents", "Tick only if you are going to rotate the sprite to face away from the camera, the tangents will be flipped when this is the case to make lighting correct."),
+															fixBackFaceRendering);
+				if (EditorGUI.EndChangeCheck())
+				{
+					SetNormalsMode(_materialEditor, normalsMode, backRendering);
+					dataChanged = true;
+				}
 			}
+			
 		}
 
 		EditorGUI.showMixedValue = false;
 
 		return dataChanged;
 	}
-
+	
 	protected virtual bool RenderShadowsProperties()
 	{
 		EditorGUI.BeginChangeCheck();
@@ -599,6 +643,26 @@ public class SpriteShaderGUI : ShaderGUI
 	#endregion
 
 	#region Private Functions
+	private void RenderMeshInfoBox()
+	{
+		Material material = (Material)_materialEditor.target;
+		bool requiresNormals = _fixedNormal != null && (GetMaterialNormalsMode(material) == eNormalsMode.MeshNormals || GetMaterialFixedNormalsBackfaceRenderingOn(material));
+		bool requiresTangents = material.HasProperty("_BumpMap") && material.GetTexture("_BumpMap") != null;
+
+		if (requiresNormals || requiresTangents)
+		{
+			string text = "Note: Material requires a mesh with ";
+
+			if (requiresNormals)
+				text += "Normals";
+
+			if (requiresTangents)
+				text += requiresNormals ? " and Tangents" : "Tangents";
+
+			GUILayout.Label(text + ".", GUI.skin.GetStyle("helpBox"));
+		}
+	}
+
 	private void SetInt(string propertyName, int value)
 	{
 		foreach (Material material in _materialEditor.targets)
@@ -613,8 +677,9 @@ public class SpriteShaderGUI : ShaderGUI
 		SetKeyword(material, "_EMISSION", false);
 		//Start with preMultiply alpha by default
 		SetBlendMode(material, eBlendMode.PreMultipliedAlpha);
-		//Start with fixed normal by default
-		SetKeyword(material, "_FIXED_NORMALS", true);
+		//Start with view space fixed normal by default
+		SetNormalsMode(material, eNormalsMode.FixedNormalsViewSpace, false);
+		_fixedNormal.vectorValue = new Vector4(0.0f, 0.0f, -1.0f, 1.0f);
 		//Start with spherical harmonics disabled?
 		SetKeyword(material, "_SPHERICAL_HARMONICS", false);
 		//Start with specular disabled
@@ -801,6 +866,39 @@ public class SpriteShaderGUI : ShaderGUI
 		}
 
 		material.renderQueue = renderQueue + material.GetInt("_RenderQueue");
+	}
+
+	private static eNormalsMode GetMaterialNormalsMode(Material material)
+	{
+		if (material.IsKeywordEnabled("_FIXED_NORMALS_VIEWSPACE") || material.IsKeywordEnabled("_FIXED_NORMALS_VIEWSPACE_BACKFACE"))
+			return eNormalsMode.FixedNormalsViewSpace;
+		if (material.IsKeywordEnabled("_FIXED_NORMALS_MODELSPACE") || material.IsKeywordEnabled("_FIXED_NORMALS_MODELSPACE_BACKFACE"))
+			return eNormalsMode.FixedNormalsModelSpace;
+
+		return eNormalsMode.MeshNormals;
+	}
+
+	private static void SetNormalsMode(MaterialEditor materialEditor, eNormalsMode normalsMode, bool allowBackFaceRendering)
+	{
+		SetNormalsMode((Material)materialEditor.target, normalsMode, allowBackFaceRendering);
+
+		foreach (Material material in materialEditor.targets)
+		{
+			SetNormalsMode(material, normalsMode, allowBackFaceRendering);
+		}
+	}
+
+	private static void SetNormalsMode(Material material, eNormalsMode normalsMode, bool allowBackFaceRendering)
+	{
+		SetKeyword(material, "_FIXED_NORMALS_VIEWSPACE", normalsMode == eNormalsMode.FixedNormalsViewSpace && !allowBackFaceRendering);
+		SetKeyword(material, "_FIXED_NORMALS_VIEWSPACE_BACKFACE", normalsMode == eNormalsMode.FixedNormalsViewSpace && allowBackFaceRendering);
+		SetKeyword(material, "_FIXED_NORMALS_MODELSPACE", normalsMode == eNormalsMode.FixedNormalsModelSpace && !allowBackFaceRendering);
+		SetKeyword(material, "_FIXED_NORMALS_MODELSPACE_BACKFACE", normalsMode == eNormalsMode.FixedNormalsModelSpace && allowBackFaceRendering);
+	}
+
+	private static bool GetMaterialFixedNormalsBackfaceRenderingOn(Material material)
+	{
+		return material.IsKeywordEnabled("_FIXED_NORMALS_VIEWSPACE_BACKFACE") || material.IsKeywordEnabled("_FIXED_NORMALS_MODELSPACE_BACKFACE");
 	}
 	#endregion
 }

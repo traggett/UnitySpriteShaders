@@ -1,12 +1,15 @@
 #ifndef SPRITE_LIGHTING_INCLUDED
 #define SPRITE_LIGHTING_INCLUDED
 
-
-
 //Check for using mesh normals
-#if !defined(_FIXED_NORMALS) && !defined(_FIXED_NORMALS_BACK_RENDERING)
+#if !defined(_FIXED_NORMALS_VIEWSPACE) && !defined(_FIXED_NORMALS_VIEWSPACE_BACKFACE) && !defined(_FIXED_NORMALS_MODELSPACE) && !defined(_FIXED_NORMALS_MODELSPACE_BACKFACE)
 #define MESH_NORMALS
-#endif // _FIXED_NORMALS || _FIXED_NORMALS_BACK_RENDERING
+#endif
+
+//Check for fixing backfacing tangents
+#if defined(_FIXED_NORMALS_VIEWSPACE_BACKFACE) || defined(_FIXED_NORMALS_MODELSPACE_BACKFACE)
+#define FIXED_NORMALS_BACKFACE_RENDERING
+#endif
 
 ////////////////////////////////////////
 // Vertex structs
@@ -17,7 +20,7 @@ struct VertexInput
 	float4 vertex : POSITION;
 	float4 texcoord : TEXCOORD0;
 	float4 color : COLOR;
-#if !defined(_FIXED_NORMALS) //_FIXED_NORMALS_BACK_RENDERING needs mesh normal to know which way the sprite is facing
+#if defined(MESH_NORMALS) || defined(FIXED_NORMALS_BACKFACE_RENDERING) //Back face rendering needs to know mesh normal to work out if a vert is facing away from the camera
 	float3 normal : NORMAL;
 #endif // _FIXED_NORMALS
 #if defined(_NORMALMAP)
@@ -30,34 +33,82 @@ struct VertexInput
 // Normal functions
 //
 
-//Fixed Normal defined in view space
+#if !defined(MESH_NORMALS)
+
 uniform float4 _FixedNormal = float4(0, 0, -1, 1);
 
-inline half3 calculateSpriteWorldNormal(VertexInput vertex)
+inline float3 getFixedNormal()
 {
-#if defined(MESH_NORMALS)
-	return calculateWorldNormal(vertex.normal);
-#else //MESH_NORMALS
-	//Rotate fixed normal by inverse camera matrix to convert the fixed normal into world space
-	float3x3 invView = transpose((float3x3)UNITY_MATRIX_VP);
 	float3 normal = _FixedNormal.xyz;
 #if UNITY_REVERSED_Z
 	normal.z = -normal.z;
 #endif
+	return normal;
+}
+
+#if defined(FIXED_NORMALS_BACKFACE_RENDERING)
+inline float getBackfacingSign(VertexInput vertex)
+{
+	//If we're using fixed normals and sprite is facing away from camera, flip tangentSign
+	//To find out if vertex is facing away from camera need its actual normal (not the fixed normal) and the world space vector to the camera
+	float3 meshWorldNormal = calculateWorldNormal(vertex.normal);
+	float3 worldPos = calculateWorldPos(vertex.vertex);
+	float3 toCamera = _WorldSpaceCameraPos - worldPos;
+	//Find dot between vector toCamera, if its negative then multiply the tangentSign by -1.
+	float toCameraDot = dot(toCamera, meshWorldNormal);
+	return sign(toCameraDot);
+}
+#endif // FIXED_NORMALS_BACKFACE_RENDERING
+
+#endif
+
+inline half3 calculateSpriteWorldNormal(VertexInput vertex)
+{
+#if defined(MESH_NORMALS)
+	
+	return calculateWorldNormal(vertex.normal);
+	
+#else //MESH_NORMALS
+
+	float3 normal = getFixedNormal();
+
+#if defined(_FIXED_NORMALS_VIEWSPACE) || defined(_FIXED_NORMALS_VIEWSPACE_BACKFACE)
+	//View space fixed normal
+	//Rotate fixed normal by inverse view matrix to convert the fixed normal into world space
+	float3x3 invView = transpose((float3x3)UNITY_MATRIX_V);
 	return normalize(mul(invView, normal));
+#else
+	//Model space fixed normal. 
+#if defined(FIXED_NORMALS_BACKFACE_RENDERING)	
+	normal *= getBackfacingSign(vertex);
+#endif
+	return calculateWorldNormal(normal);
+#endif
+	
 #endif // !MESH_NORMALS
 }
 
 inline half3 calculateSpriteViewNormal(VertexInput vertex)
 {
 #if defined(MESH_NORMALS)
+	
 	return normalize(mul((float3x3)UNITY_MATRIX_IT_MV, vertex.normal));
+	
 #else // !MESH_NORMALS
-	float3 normal = _FixedNormal.xyz;
-#if UNITY_REVERSED_Z
-	normal.z = -normal.z;
-#endif
+
+	float3 normal = getFixedNormal();
+
+#if defined(_FIXED_NORMALS_VIEWSPACE) || defined(_FIXED_NORMALS_VIEWSPACE_BACKFACE)
+	//View space fixed normal
 	return normal;
+#else
+	//Model space fixed normal
+#if defined(FIXED_NORMALS_BACKFACE_RENDERING)	
+	normal *= getBackfacingSign(vertex);
+#endif
+	return normalize(mul((float3x3)UNITY_MATRIX_IT_MV, normal));
+#endif
+		
 #endif // !MESH_NORMALS
 }
 
@@ -67,19 +118,13 @@ inline half3 calculateSpriteViewNormal(VertexInput vertex)
 
 #if defined(_NORMALMAP)
 
-inline half3 calculateSpriteWorldBinormal(VertexInput vertex, half4 worldPos, half3 normalWorld, half3 tangentWorld)
+inline half3 calculateSpriteWorldBinormal(VertexInput vertex, half3 normalWorld, half3 tangentWorld)
 {
 	float tangentSign = vertex.tangent.w;
 
-#if defined(_FIXED_NORMALS_BACK_RENDERING)
-	//If we're using fixed normals and sprite is facing away from camera, flip tangentSign
-	//To find out if vertex is facing away from camera need its actual normal (not the fixed normal) and the world space vector to the camera
-	float3 meshWorldNormal = calculateWorldNormal(vertex.normal);
-	float3 toCamera = _WorldSpaceCameraPos - worldPos;
-	//Find dot between vector toCamera, if its negative then multiply the tangentSign by -1.
-	float toCameraDot = dot(toCamera, meshWorldNormal);
-	tangentSign *= sign(toCameraDot);
-#endif // _FIXED_NORMALS_BACK_RENDERING
+#if defined(FIXED_NORMALS_BACKFACE_RENDERING)
+	tangentSign *= getBackfacingSign(vertex);
+#endif
 
 	return calculateWorldBinormal(normalWorld, tangentWorld, tangentSign);
 }

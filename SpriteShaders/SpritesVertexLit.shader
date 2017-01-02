@@ -58,10 +58,10 @@ Shader "Sprite (Vertex Lit)"
 				#pragma target 3.0
 				
 				#pragma shader_feature _ _ALPHABLEND_ON _ALPHAPREMULTIPLY_ON _ADDITIVEBLEND _ADDITIVEBLEND_SOFT _MULTIPLYBLEND _MULTIPLYBLEND_X2
-				#pragma shader_feature _NORMALMAP
-				#pragma shader_feature _ _FIXED_NORMALS _FIXED_NORMALS_BACK_RENDERING
-				#pragma shader_feature _ALPHA_CLIP
+				#pragma shader_feature _ _FIXED_NORMALS_VIEWSPACE _FIXED_NORMALS_VIEWSPACE_BACKFACE _FIXED_NORMALS_MODELSPACE  _FIXED_NORMALS_MODELSPACE_BACKFACE
 				#pragma shader_feature _ _SPECULAR _SPECULAR_GLOSSMAP
+				#pragma shader_feature _NORMALMAP
+				#pragma shader_feature _ALPHA_CLIP
 				#pragma shader_feature _EMISSION
 				#pragma shader_feature _DIFFUSE_RAMP
 				#pragma shader_feature _COLOR_ADJUST
