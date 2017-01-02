@@ -41,7 +41,7 @@ Shader "Sprite (Vertex Lit)"
 	
 	SubShader
 	{
-		Tags { "Queue"="Transparent" "RenderType"="Sprite" "AlphaDepth"="False" }
+		Tags { "Queue"="Transparent" "RenderType"="Sprite" "AlphaDepth"="False" "CanUseSpriteAtlas"="True" "IgnoreProjector"="True" }
 		LOD 150
 		
 		Pass

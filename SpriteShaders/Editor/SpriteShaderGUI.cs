@@ -679,7 +679,8 @@ public class SpriteShaderGUI : ShaderGUI
 		SetBlendMode(material, eBlendMode.PreMultipliedAlpha);
 		//Start with view space fixed normal by default
 		SetNormalsMode(material, eNormalsMode.FixedNormalsViewSpace, false);
-		_fixedNormal.vectorValue = new Vector4(0.0f, 0.0f, -1.0f, 1.0f);
+		if (_fixedNormal != null)
+			_fixedNormal.vectorValue = new Vector4(0.0f, 0.0f, -1.0f, 1.0f);
 		//Start with spherical harmonics disabled?
 		SetKeyword(material, "_SPHERICAL_HARMONICS", false);
 		//Start with specular disabled
@@ -695,10 +696,8 @@ public class SpriteShaderGUI : ShaderGUI
 
 		if (material.HasProperty("_FixedNormal"))
 		{
-			//Set special sprite render queue if using fixed normal so can render custom depthNormal texture
-			bool fixedNormals = material.IsKeywordEnabled("_FIXED_NORMALS");
-			bool fixedNormalsBackRendering = material.IsKeywordEnabled("_FIXED_NORMALS_BACK_RENDERING");
-			meshNormal = !fixedNormals && !fixedNormalsBackRendering;
+			//Set special sprite render queue if using fixed normals so can render custom depthNormal texture
+			meshNormal = GetMaterialNormalsMode(material) == eNormalsMode.MeshNormals;
 		}
 		
 		material.SetOverrideTag("RenderType", meshNormal ? queue : "Sprite");
@@ -866,6 +865,7 @@ public class SpriteShaderGUI : ShaderGUI
 		}
 
 		material.renderQueue = renderQueue + material.GetInt("_RenderQueue");
+		material.SetOverrideTag("IgnoreProjector", blendMode == eBlendMode.Opaque ? "False" : "True");
 	}
 
 	private static eNormalsMode GetMaterialNormalsMode(Material material)

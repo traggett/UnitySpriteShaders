@@ -123,7 +123,16 @@ inline half3 calculateSpriteWorldBinormal(VertexInput vertex, half3 normalWorld,
 	float tangentSign = vertex.tangent.w;
 
 #if defined(FIXED_NORMALS_BACKFACE_RENDERING)
-	tangentSign *= getBackfacingSign(vertex);
+	float backFaceSign = getBackfacingSign(vertex);
+	
+#if defined(_FIXED_NORMALS_VIEWSPACE) || defined(_FIXED_NORMALS_VIEWSPACE_BACKFACE)
+	//View space fixed normal
+	tangentSign *= backFaceSign;
+#else
+	//Model space fixed normal - only need flip tangent sign when scale is negative
+	tangentSign *= unity_WorldTransformParams.w < 0 ? backFaceSign : 1.0;
+#endif
+
 #endif
 
 	return calculateWorldBinormal(normalWorld, tangentWorld, tangentSign);
