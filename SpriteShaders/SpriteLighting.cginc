@@ -80,6 +80,7 @@ inline half3 calculateSpriteWorldNormal(VertexInput vertex)
 #else
 	//Model space fixed normal. 
 #if defined(FIXED_NORMALS_BACKFACE_RENDERING)	
+	//If back face rendering is enabled and the sprite is facing away from the camera (ie we're rendering the backface) then need to flip the normal
 	normal *= getBackfacingSign(vertex);
 #endif
 	return calculateWorldNormal(normal);
@@ -104,6 +105,7 @@ inline half3 calculateSpriteViewNormal(VertexInput vertex)
 #else
 	//Model space fixed normal
 #if defined(FIXED_NORMALS_BACKFACE_RENDERING)	
+	//If back face rendering is enabled and the sprite is facing away from the camera (ie we're rendering the backface) then need to flip the normal
 	normal *= getBackfacingSign(vertex);
 #endif
 	return normalize(mul((float3x3)UNITY_MATRIX_IT_MV, normal));
@@ -123,16 +125,7 @@ inline half3 calculateSpriteWorldBinormal(VertexInput vertex, half3 normalWorld,
 	float tangentSign = vertex.tangent.w;
 
 #if defined(FIXED_NORMALS_BACKFACE_RENDERING)
-	float backFaceSign = getBackfacingSign(vertex);
-	
-#if defined(_FIXED_NORMALS_VIEWSPACE) || defined(_FIXED_NORMALS_VIEWSPACE_BACKFACE)
-	//View space fixed normal
-	tangentSign *= backFaceSign;
-#else
-	//Model space fixed normal - only need flip tangent sign when scale is negative
-	tangentSign *= unity_WorldTransformParams.w < 0 ? backFaceSign : 1.0;
-#endif
-
+	tangentSign *= getBackfacingSign(vertex);
 #endif
 
 	return calculateWorldBinormal(normalWorld, tangentWorld, tangentSign);
