@@ -687,7 +687,7 @@ public class SpriteShaderGUI : ShaderGUI
 		SetKeyword(material, "_SPECULAR", false);
 		SetKeyword(material, "_SPECULAR_GLOSSMAP", false);
 		//Start with Culling disabled
-		SetInt("_Cull", (int)eCulling.Off);
+		material.SetInt("_Cull", (int)eCulling.Off);
 	}
 
 	private static void SetRenderQueue(Material material, string queue)
