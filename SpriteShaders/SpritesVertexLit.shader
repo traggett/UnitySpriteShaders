@@ -70,7 +70,7 @@ Shader "Sprite (Vertex Lit)"
 				#pragma shader_feature _SPHERICAL_HARMONICS
 				#pragma shader_feature _FOG
 				
-                #pragma fragmentoption ARB_precision_hint_fastest
+				#pragma fragmentoption ARB_precision_hint_fastest
 				#pragma multi_compile_fog
 				
 				#pragma vertex vert

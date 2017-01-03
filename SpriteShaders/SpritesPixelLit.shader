@@ -70,7 +70,7 @@ Shader "Sprite (Pixel Lit)"
 				#pragma shader_feature _FOG
 				
 				#pragma multi_compile_fwdbase
-                #pragma fragmentoption ARB_precision_hint_fastest
+				#pragma fragmentoption ARB_precision_hint_fastest
 				#pragma multi_compile_fog
 				
 				#pragma vertex vert
@@ -102,7 +102,7 @@ Shader "Sprite (Pixel Lit)"
 				#pragma shader_feature _FOG
 				
 				#pragma multi_compile_fwdadd_fullshadows
-                #pragma fragmentoption ARB_precision_hint_fastest
+				#pragma fragmentoption ARB_precision_hint_fastest
 				#pragma multi_compile_fog
 				
 				#pragma vertex vert
