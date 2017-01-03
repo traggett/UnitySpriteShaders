@@ -20,7 +20,7 @@ struct VertexInput
 	float4 vertex : POSITION;
 	float4 texcoord : TEXCOORD0;
 	float4 color : COLOR;
-#if defined(MESH_NORMALS) || defined(FIXED_NORMALS_BACKFACE_RENDERING) //Back face rendering needs to know mesh normal to work out if a vert is facing away from the camera
+#if defined(MESH_NORMALS)
 	float3 normal : NORMAL;
 #endif // _FIXED_NORMALS
 #if defined(_NORMALMAP)
@@ -47,15 +47,16 @@ inline float3 getFixedNormal()
 }
 #if defined(FIXED_NORMALS_BACKFACE_RENDERING)
 
-inline float calculateBackfacingSign(float3 worldPos, float3 normal)
+inline float calculateBackfacingSign(float3 worldPos)
 {
-	//If we're using fixed normals and sprite is facing away from camera, flip tangentSign
-	//To find out if vertex is facing away from camera need its actual normal (not the fixed normal) and the world space vector to the camera
-	float3 meshWorldNormal = calculateWorldNormal(normal);
+	//If we're using fixed normals and mesh is facing away from camera, flip tangentSign
+	float3 forward = float3(0,0,1);
+#if UNITY_REVERSED_Z
+	forward.z = -forward.z;
+#endif	
+	float3 meshWorldForward = mul((float3x3)unity_ObjectToWorld, forward);
 	float3 toCamera = _WorldSpaceCameraPos - worldPos;
-	//Find dot between vector toCamera, if its negative then multiply the tangentSign by -1.
-	float toCameraDot = dot(toCamera, meshWorldNormal);
-	return sign(toCameraDot);
+	return sign(dot(toCamera, meshWorldForward));
 }
 #endif // FIXED_NORMALS_BACKFACE_RENDERING
 

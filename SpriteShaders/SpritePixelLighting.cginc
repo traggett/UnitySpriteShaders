@@ -135,7 +135,7 @@ VertexOutput vert(VertexInput v)
 	
 	float backFaceSign = 1;
 #if defined(FIXED_NORMALS_BACKFACE_RENDERING)	
-	backFaceSign = calculateBackfacingSign(output.posWorld.xyz, v.normal);
+	backFaceSign = calculateBackfacingSign(output.posWorld.xyz);
 #endif	
 
 	output.normalWorld = calculateSpriteWorldNormal(v, backFaceSign);

@@ -347,7 +347,7 @@ VertexOutput vert(VertexInput input)
 
 	float backFaceSign = 1;
 #if defined(FIXED_NORMALS_BACKFACE_RENDERING)	
-	backFaceSign = calculateBackfacingSign(powWorld.xyz, input.normal);
+	backFaceSign = calculateBackfacingSign(powWorld.xyz);
 #endif	
 
 #if defined(PER_PIXEL_LIGHTING)

@@ -19,6 +19,7 @@ CGPROGRAM
 #pragma vertex vert
 #pragma fragment frag
 #include "UnityCG.cginc"
+#include "ShaderMaths.cginc"
 
 struct v2f {
     float4 pos : SV_POSITION;
@@ -58,6 +59,7 @@ CGPROGRAM
 #pragma vertex vert
 #pragma fragment frag
 #include "UnityCG.cginc"
+#include "ShaderMaths.cginc"
 struct v2f {
     float4 pos : SV_POSITION;
     float depth : TEXCOORD1;
@@ -85,7 +87,8 @@ CGPROGRAM
 #pragma target 3.0
 #pragma vertex vert
 #pragma fragment frag
-#include "UnityCG.cginc"
+#include "UnityCG.cginc" 
+#include "ShaderMaths.cginc"
 struct v2f {
     float4 pos : SV_POSITION;
 	float2 uv : TEXCOORD0;
@@ -121,7 +124,8 @@ CGPROGRAM
 #pragma target 3.0
 #pragma vertex vert
 #pragma fragment frag
-#include "UnityCG.cginc"
+#include "UnityCG.cginc" 
+#include "ShaderMaths.cginc"
 #include "Lighting.cginc"
 #include "UnityBuiltin3xTreeLibrary.cginc"
 struct v2f {
@@ -155,7 +159,8 @@ CGPROGRAM
 #pragma target 3.0
 #pragma vertex vert
 #pragma fragment frag
-#include "UnityCG.cginc"
+#include "UnityCG.cginc" 
+#include "ShaderMaths.cginc"
 #include "Lighting.cginc"
 #include "UnityBuiltin3xTreeLibrary.cginc"
 struct v2f {
@@ -194,7 +199,8 @@ CGPROGRAM
 #pragma target 3.0
 #pragma vertex vert
 #pragma fragment frag
-#include "UnityCG.cginc"
+#include "UnityCG.cginc" 
+#include "ShaderMaths.cginc"
 #include "TerrainEngine.cginc"
 struct v2f {
 	float4 pos : SV_POSITION;
@@ -231,7 +237,8 @@ CGPROGRAM
 #pragma target 3.0
 #pragma vertex vert
 #pragma fragment frag
-#include "UnityCG.cginc"
+#include "UnityCG.cginc" 
+#include "ShaderMaths.cginc"
 #include "TerrainEngine.cginc"
 
 struct v2f {
@@ -273,7 +280,8 @@ CGPROGRAM
 #pragma target 3.0
 #pragma vertex vert
 #pragma fragment frag
-#include "UnityCG.cginc"
+#include "UnityCG.cginc" 
+#include "ShaderMaths.cginc"
 #include "TerrainEngine.cginc"
 
 struct v2f {
@@ -296,8 +304,7 @@ v2f vert( appdata v ) {
 	TerrainAnimateTree(v.vertex, v.color.w);
 	o.pos = UnityObjectToClipPos(v.vertex);
 	o.uv = v.texcoord.xy;
-    o.nz.xyz = -COMPUTE_VIEW_NORMAL;
-    o.nz.w = COMPUTE_DEPTH_01;
+    o.depth = COMPUTE_DEPTH_01;
 	return o;
 }
 uniform sampler2D _MainTex;
@@ -320,7 +327,8 @@ CGPROGRAM
 #pragma target 3.0
 #pragma vertex vert
 #pragma fragment frag
-#include "UnityCG.cginc"
+#include "UnityCG.cginc" 
+#include "ShaderMaths.cginc"
 #include "TerrainEngine.cginc"
 struct v2f {
 	float4 pos : SV_POSITION;
@@ -336,8 +344,7 @@ v2f vert (appdata_tree_billboard v) {
 	o.pos = UnityObjectToClipPos(v.vertex);
 	o.uv.x = v.texcoord.x;
 	o.uv.y = v.texcoord.y > 0;
-    o.nz.xyz = float3(0,0,1);
-    o.nz.w = COMPUTE_DEPTH_01;
+    o.depth = COMPUTE_DEPTH_01;
 	return o;
 }
 uniform sampler2D _MainTex;
@@ -358,7 +365,8 @@ CGPROGRAM
 #pragma target 3.0
 #pragma vertex vert
 #pragma fragment frag
-#include "UnityCG.cginc"
+#include "UnityCG.cginc" 
+#include "ShaderMaths.cginc"
 #include "TerrainEngine.cginc"
 
 struct v2f {
@@ -400,7 +408,8 @@ CGPROGRAM
 #pragma target 3.0
 #pragma vertex vert
 #pragma fragment frag
-#include "UnityCG.cginc"
+#include "UnityCG.cginc" 
+#include "ShaderMaths.cginc"
 #include "TerrainEngine.cginc"
 struct v2f {
 	float4 pos : SV_POSITION;

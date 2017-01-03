@@ -1,6 +1,8 @@
 #ifndef SPRITE_SPECULAR_INCLUDED
 #define SPRITE_SPECULAR_INCLUDED
 
+#include "ShaderMaths.cginc"
+
 ////////////////////////////////////////
 // Specular functions
 //
@@ -178,13 +180,13 @@ inline half GGXTerm (half NdotH, half roughness)
 
 inline half3 FresnelTerm (half3 F0, half cosA)
 {
-	half t = Pow5 (1 - cosA);	// ala Schlick interpoliation
+	half t = pow5 (1 - cosA);	// ala Schlick interpoliation
 	return F0 + (1-F0) * t;
 }
 
 inline half3 FresnelLerp (half3 F0, half F90, half cosA)
 {
-	half t = Pow5 (1 - cosA);	// ala Schlick interpoliation
+	half t = pow5 (1 - cosA);	// ala Schlick interpoliation
 	return lerp (F0, F90, t);
 }
 
@@ -193,8 +195,8 @@ inline half DisneyDiffuse(half NdotV, half NdotL, half LdotH, half perceptualRou
 {
 	half fd90 = 0.5 + 2 * LdotH * LdotH * perceptualRoughness;
 	// Two schlick fresnel term
-	half lightScatter	= (1 + (fd90 - 1) * Pow5(1 - NdotL));
-	half viewScatter	= (1 + (fd90 - 1) * Pow5(1 - NdotV));
+	half lightScatter	= (1 + (fd90 - 1) * pow5(1 - NdotL));
+	half viewScatter	= (1 + (fd90 - 1) * pow5(1 - NdotV));
 
 	return lightScatter * viewScatter;
 }

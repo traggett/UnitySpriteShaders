@@ -646,7 +646,7 @@ public class SpriteShaderGUI : ShaderGUI
 	private void RenderMeshInfoBox()
 	{
 		Material material = (Material)_materialEditor.target;
-		bool requiresNormals = _fixedNormal != null && (GetMaterialNormalsMode(material) == eNormalsMode.MeshNormals || GetMaterialFixedNormalsBackfaceRenderingOn(material));
+		bool requiresNormals = _fixedNormal != null && GetMaterialNormalsMode(material) == eNormalsMode.MeshNormals;
 		bool requiresTangents = material.HasProperty("_BumpMap") && material.GetTexture("_BumpMap") != null;
 
 		if (requiresNormals || requiresTangents)
