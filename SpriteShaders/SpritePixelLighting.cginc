@@ -132,12 +132,18 @@ VertexOutput vert(VertexInput v)
 	output.color = calculateVertexColor(v.color);
 	output.texcoord = calculateTextureCoord(v.texcoord);
 	output.posWorld = calculateWorldPos(v.vertex);
-	output.normalWorld = calculateSpriteWorldNormal(v);
+	
+	float backFaceSign = 1;
+#if defined(FIXED_NORMALS_BACKFACE_RENDERING)	
+	backFaceSign = calculateBackfacingSign(output.posWorld.xyz, v.normal);
+#endif	
+
+	output.normalWorld = calculateSpriteWorldNormal(v, backFaceSign);
 	output.vertexLighting = calculateVertexLighting(output.posWorld, output.normalWorld);
 	
 #if defined(_NORMALMAP)
 	output.tangentWorld = calculateWorldTangent(v.tangent);
-	output.binormalWorld = calculateSpriteWorldBinormal(v, output.normalWorld, output.tangentWorld);
+	output.binormalWorld = calculateSpriteWorldBinormal(v, output.normalWorld, output.tangentWorld, backFaceSign);
 #endif
 
 	TRANSFER_VERTEX_TO_FRAGMENT(output)

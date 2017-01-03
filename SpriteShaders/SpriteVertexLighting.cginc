@@ -341,11 +341,19 @@ VertexOutput vert(VertexInput input)
 	output.texcoord = float3(calculateTextureCoord(input.texcoord), 0);
 	
 	float3 viewPos = mul(UNITY_MATRIX_MV, input.vertex);
+#if defined(FIXED_NORMALS_BACKFACE_RENDERING) || defined(_RIM_LIGHTING)
+	float4 powWorld = calculateWorldPos(input.vertex);
+#endif	
+
+	float backFaceSign = 1;
+#if defined(FIXED_NORMALS_BACKFACE_RENDERING)	
+	backFaceSign = calculateBackfacingSign(powWorld.xyz, input.normal);
+#endif	
 
 #if defined(PER_PIXEL_LIGHTING)
 	
 	#if defined(_RIM_LIGHTING)
-		output.posWorld = calculateWorldPos(input.vertex);
+		output.posWorld = powWorld;
 	#endif
 
 	PACK_VERTEX_LIGHT(0, output, viewPos)
@@ -353,19 +361,19 @@ VertexOutput vert(VertexInput input)
 	PACK_VERTEX_LIGHT(2, output, viewPos)
 	PACK_VERTEX_LIGHT(3, output, viewPos)
 	
-	output.normalWorld.xyz = calculateSpriteWorldNormal(input);
+	output.normalWorld.xyz = calculateSpriteWorldNormal(input, backFaceSign);
 	
 	#if defined(_NORMALMAP)
 		output.tangentWorld.xyz = calculateWorldTangent(input.tangent);
-		output.binormalWorld.xyz = calculateSpriteWorldBinormal(input, output.normalWorld, output.tangentWorld);	
+		output.binormalWorld.xyz = calculateSpriteWorldBinormal(input, output.normalWorld, output.tangentWorld, backFaceSign);	
 	#endif
 	
 #else // !PER_PIXEL_LIGHTING
 	
 	//Just pack full lighting
-	float3 viewNormal = calculateSpriteViewNormal(input);
+	float3 viewNormal = calculateSpriteViewNormal(input, backFaceSign);
 	//Get Ambient diffuse
-	float3 normalWorld = calculateSpriteWorldNormal(input);
+	float3 normalWorld = calculateSpriteWorldNormal(input, backFaceSign);
 	fixed3 ambient = calculateAmbientLight(normalWorld);	
 	
 	fixed3 diffuse = calculateLightDiffuse(0, viewPos, viewNormal);

@@ -45,14 +45,13 @@ inline float3 getFixedNormal()
 #endif
 	return normal;
 }
-
 #if defined(FIXED_NORMALS_BACKFACE_RENDERING)
-inline float getBackfacingSign(VertexInput vertex)
+
+inline float calculateBackfacingSign(float3 worldPos, float3 normal)
 {
 	//If we're using fixed normals and sprite is facing away from camera, flip tangentSign
 	//To find out if vertex is facing away from camera need its actual normal (not the fixed normal) and the world space vector to the camera
-	float3 meshWorldNormal = calculateWorldNormal(vertex.normal);
-	float3 worldPos = calculateWorldPos(vertex.vertex);
+	float3 meshWorldNormal = calculateWorldNormal(normal);
 	float3 toCamera = _WorldSpaceCameraPos - worldPos;
 	//Find dot between vector toCamera, if its negative then multiply the tangentSign by -1.
 	float toCameraDot = dot(toCamera, meshWorldNormal);
@@ -62,7 +61,7 @@ inline float getBackfacingSign(VertexInput vertex)
 
 #endif
 
-inline half3 calculateSpriteWorldNormal(VertexInput vertex)
+inline half3 calculateSpriteWorldNormal(VertexInput vertex, float backFaceSign)
 {
 #if defined(MESH_NORMALS)
 	
@@ -81,7 +80,7 @@ inline half3 calculateSpriteWorldNormal(VertexInput vertex)
 	//Model space fixed normal. 
 #if defined(FIXED_NORMALS_BACKFACE_RENDERING)	
 	//If back face rendering is enabled and the sprite is facing away from the camera (ie we're rendering the backface) then need to flip the normal
-	normal *= getBackfacingSign(vertex);
+	normal *= backFaceSign;
 #endif
 	return calculateWorldNormal(normal);
 #endif
@@ -89,7 +88,7 @@ inline half3 calculateSpriteWorldNormal(VertexInput vertex)
 #endif // !MESH_NORMALS
 }
 
-inline half3 calculateSpriteViewNormal(VertexInput vertex)
+inline half3 calculateSpriteViewNormal(VertexInput vertex, float backFaceSign)
 {
 #if defined(MESH_NORMALS)
 	
@@ -106,7 +105,7 @@ inline half3 calculateSpriteViewNormal(VertexInput vertex)
 	//Model space fixed normal
 #if defined(FIXED_NORMALS_BACKFACE_RENDERING)	
 	//If back face rendering is enabled and the sprite is facing away from the camera (ie we're rendering the backface) then need to flip the normal
-	normal *= getBackfacingSign(vertex);
+	normal *= backFaceSign;
 #endif
 	return normalize(mul((float3x3)UNITY_MATRIX_IT_MV, normal));
 #endif
@@ -120,12 +119,12 @@ inline half3 calculateSpriteViewNormal(VertexInput vertex)
 
 #if defined(_NORMALMAP)
 
-inline half3 calculateSpriteWorldBinormal(VertexInput vertex, half3 normalWorld, half3 tangentWorld)
+inline half3 calculateSpriteWorldBinormal(VertexInput vertex, half3 normalWorld, half3 tangentWorld, float backFaceSign)
 {
 	float tangentSign = vertex.tangent.w;
 
 #if defined(FIXED_NORMALS_BACKFACE_RENDERING)
-	tangentSign *= getBackfacingSign(vertex);
+	tangentSign *= backFaceSign;
 #endif
 
 	return calculateWorldBinormal(normalWorld, tangentWorld, tangentSign);
