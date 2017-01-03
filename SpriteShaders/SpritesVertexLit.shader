@@ -103,6 +103,6 @@ Shader "Sprite (Vertex Lit)"
 		}
 	}
 	
-	FallBack "Game/Sprite Unlit"
+	FallBack "Sprite (Unlit)"
 	CustomEditor "SpriteShaderGUI"
 }
