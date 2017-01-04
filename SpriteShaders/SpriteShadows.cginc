@@ -1,7 +1,7 @@
 #ifndef SPRITE_SHADOWS_INCLUDED
 #define SPRITE_SHADOWS_INCLUDED
 
-#include "UnityCG.cginc"
+#include "ShaderShared.cginc"
 
 ////////////////////////////////////////
 // Vertex structs
@@ -16,21 +16,18 @@ struct vertexInput
 struct vertexOutput
 { 
 	V2F_SHADOW_CASTER;
-	float4 texcoord : TEXCOORD1;
+	float2 texcoord : TEXCOORD1;
 };
 
 ////////////////////////////////////////
 // Vertex program
 //
 
-uniform sampler2D _MainTex;
-uniform fixed4 _MainTex_ST;
-
 vertexOutput vert(vertexInput v)
 {
 	vertexOutput o;
 	TRANSFER_SHADOW_CASTER(o)
-	o.texcoord = float4(TRANSFORM_TEX(v.texcoord, _MainTex), 0, 0);
+	o.texcoord = calculateTextureCoord(v.texcoord);
 	return o;
 }
 
@@ -43,7 +40,7 @@ uniform fixed _ShadowAlphaCutoff;
 
 fixed4 frag(vertexOutput IN) : COLOR 
 {
-	fixed4 texureColor = tex2D(_MainTex, IN.texcoord.xy);
+	fixed4 texureColor = calculateTexturePixel(IN.texcoord);
 	clip(texureColor.a - _ShadowAlphaCutoff);
 	
 	SHADOW_CASTER_FRAGMENT(IN)

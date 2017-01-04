@@ -14,7 +14,11 @@ inline float4 calculateWorldPos(float4 vertex)
 
 inline float4 calculateLocalPos(float4 vertex)
 {
-	return mul(UNITY_MATRIX_MVP, vertex);
+	float4 pos = UnityObjectToClipPos(vertex);
+#ifdef PIXELSNAP_ON
+	pos = UnityPixelSnap(pos);
+#endif
+	return pos;
 }
 
 inline half3 calculateWorldNormal(float3 normal)
@@ -37,7 +41,10 @@ inline half3 calculateWorldTangent(float4 tangent)
 
 inline half3 calculateWorldBinormal(half3 normalWorld, half3 tangentWorld, float tangentSign)
 {
-	half sign = tangentSign * unity_WorldTransformParams.w;
+	//When calculating the binormal we have to flip it when the mesh is scaled negatively.
+	//Normally this would just be unity_WorldTransformParams.w but this isn't set correctly by Unity for its SpriteRenderer meshes so get from objectToWorld matrix scale instead.
+	half worldTransformSign = sign(unity_ObjectToWorld[0][0] * unity_ObjectToWorld[1][1] * unity_ObjectToWorld[2][2]);
+	half sign = tangentSign * worldTransformSign;
 	return cross(normalWorld, tangentWorld) * sign;
 }
 
@@ -371,11 +378,16 @@ inline fixed4 applyFog(fixed4 pixel, float1 fogCoord)
 
 uniform sampler2D _MainTex;
 
+#if ETC1_EXTERNAL_ALPHA
+//External alpha texture for ETC1 compression
+uniform sampler2D _AlphaTex;
+#endif //ETC1_EXTERNAL_ALPHA
+
 #if _TEXTURE_BLEND
 uniform sampler2D _BlendTex;
 uniform float _BlendAmount;
 
-fixed4 calculateBlendedTexturePixel(float2 texcoord)
+inline fixed4 calculateBlendedTexturePixel(float2 texcoord)
 {
 	return (1.0-_BlendAmount) * tex2D(_MainTex, texcoord) + _BlendAmount * tex2D(_BlendTex, texcoord);
 }
@@ -390,6 +402,11 @@ inline fixed4 calculateTexturePixel(float2 texcoord)
 #else
 	pixel = tex2D(_MainTex, texcoord);
 #endif // !_TEXTURE_BLEND
+
+#if ETC1_EXTERNAL_ALPHA
+	// get the color from an external texture (usecase: Alpha support for ETC1 on android)
+	pixel.a = tex2D (_AlphaTex, texcoord).r;
+#endif //ETC1_EXTERNAL_ALPHA
 
 #if defined(_COLOR_ADJUST)
 	pixel = adjustColor(pixel);

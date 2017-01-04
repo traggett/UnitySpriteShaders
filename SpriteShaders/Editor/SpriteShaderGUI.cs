@@ -47,7 +47,8 @@ public class SpriteShaderGUI : ShaderGUI
 
 	private MaterialProperty _mainTexture = null;
 	private MaterialProperty _color = null;
-	
+
+	private MaterialProperty _pixelSnap = null;
 
 	private MaterialProperty _writeToDepth = null;
 	private MaterialProperty _depthAlphaCutoff = null;
@@ -106,6 +107,8 @@ public class SpriteShaderGUI : ShaderGUI
 	{
 		_mainTexture = FindProperty("_MainTex", props);
 		_color = FindProperty("_Color", props);
+
+		_pixelSnap = FindProperty("PixelSnap", props);
 
 		_writeToDepth = FindProperty("_ZWrite", props);
 		_depthAlphaCutoff = FindProperty("_Cutoff", props);
@@ -305,6 +308,8 @@ public class SpriteShaderGUI : ShaderGUI
 		}
 
 		EditorGUI.showMixedValue = false;
+
+		_materialEditor.ShaderProperty(_pixelSnap, "Pixel Snap");
 
 		return dataChanged;
 	}

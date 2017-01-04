@@ -68,7 +68,7 @@ inline half3 calculateSpriteWorldNormal(VertexInput vertex, float backFaceSign)
 	
 	return calculateWorldNormal(vertex.normal);
 	
-#else //MESH_NORMALS
+#else // !MESH_NORMALS
 
 	float3 normal = getFixedNormal();
 

@@ -6,6 +6,8 @@ Shader "Sprite (Pixel Lit)"
 		_Color ("Color", Color) = (1,1,1,1)
 		_BumpMap ("Normal Map", 2D) = "bump" {}
 		
+		[MaterialToggle] PixelSnap ("Pixel snap", Float) = 0
+		
 		_EmissionColor("Color", Color) = (0,0,0,0)		
 		_EmissionMap("Emission", 2D) = "white" {}
 		_EmissionPower("Emission Power", Float) = 2.0	
@@ -72,6 +74,8 @@ Shader "Sprite (Pixel Lit)"
 				#pragma multi_compile_fwdbase
 				#pragma fragmentoption ARB_precision_hint_fastest
 				#pragma multi_compile_fog
+				#pragma multi_compile _ PIXELSNAP_ON
+				#pragma multi_compile _ ETC1_EXTERNAL_ALPHA
 				
 				#pragma vertex vert
 				#pragma fragment fragBase
@@ -104,6 +108,8 @@ Shader "Sprite (Pixel Lit)"
 				#pragma multi_compile_fwdadd_fullshadows
 				#pragma fragmentoption ARB_precision_hint_fastest
 				#pragma multi_compile_fog
+				#pragma multi_compile _ PIXELSNAP_ON
+				#pragma multi_compile _ ETC1_EXTERNAL_ALPHA
 				
 				#pragma vertex vert
 				#pragma fragment fragAdd
@@ -124,8 +130,10 @@ Shader "Sprite (Pixel Lit)"
 			Lighting Off
 			
 			CGPROGRAM		
-				#pragma multi_compile_shadowcaster
 				#pragma fragmentoption ARB_precision_hint_fastest
+				#pragma multi_compile_shadowcaster
+				#pragma multi_compile _ PIXELSNAP_ON
+				#pragma multi_compile _ ETC1_EXTERNAL_ALPHA
 				
 				#pragma vertex vert
 				#pragma fragment frag

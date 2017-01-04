@@ -5,6 +5,8 @@ Shader "Sprite (Unlit)"
 		_MainTex ("Main Texture", 2D) = "white" {}
 		_Color ("Color", Color) = (1,1,1,1)
 		
+		[MaterialToggle] PixelSnap ("Pixel snap", Float) = 0
+		
 		[ToggleOff] _ZWrite ("Depth Write", Float) = 0.0
 		_Cutoff ("Depth alpha cutoff", Range(0,1)) = 0.0
 		_ShadowAlphaCutoff ("Shadow alpha cutoff", Range(0,1)) = 0.1
@@ -46,6 +48,8 @@ Shader "Sprite (Unlit)"
 				
 				#pragma fragmentoption ARB_precision_hint_fastest
 				#pragma multi_compile_fog
+				#pragma multi_compile _ PIXELSNAP_ON
+				#pragma multi_compile _ ETC1_EXTERNAL_ALPHA
 				
 				#pragma vertex vert
 				#pragma fragment frag
@@ -66,8 +70,10 @@ Shader "Sprite (Unlit)"
 			Lighting Off
 			
 			CGPROGRAM		
-				#pragma multi_compile_shadowcaster
 				#pragma fragmentoption ARB_precision_hint_fastest
+				#pragma multi_compile_shadowcaster
+				#pragma multi_compile _ PIXELSNAP_ON
+				#pragma multi_compile _ ETC1_EXTERNAL_ALPHA
 				
 				#pragma vertex vert
 				#pragma fragment frag
