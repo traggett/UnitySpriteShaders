@@ -309,7 +309,12 @@ public class SpriteShaderGUI : ShaderGUI
 
 		EditorGUI.showMixedValue = false;
 
+		EditorGUI.BeginChangeCheck();
 		_materialEditor.ShaderProperty(_pixelSnap, "Pixel Snap");
+		if (EditorGUI.EndChangeCheck())
+		{
+			dataChanged = true;
+		}
 
 		return dataChanged;
 	}
@@ -424,6 +429,7 @@ public class SpriteShaderGUI : ShaderGUI
 				_fixedNormal.vectorValue =  new Vector4(0.0f, 0.0f, normalsMode == eNormalsMode.FixedNormalsViewSpace ? -1.0f : 1.0f, 1.0f);
 
 				mixedNormalsMode = false;
+				dataChanged = true;
 			}
 
 			//Show fixed normal
