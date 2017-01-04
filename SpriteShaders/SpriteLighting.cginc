@@ -33,8 +33,6 @@ struct VertexInput
 // Normal functions
 //
 
-#if !defined(MESH_NORMALS)
-
 uniform float4 _FixedNormal = float4(0, 0, -1, 1);
 
 inline float3 getFixedNormal()
@@ -45,7 +43,6 @@ inline float3 getFixedNormal()
 #endif
 	return normal;
 }
-#if defined(FIXED_NORMALS_BACKFACE_RENDERING)
 
 inline float calculateBackfacingSign(float3 worldPos)
 {
@@ -58,9 +55,7 @@ inline float calculateBackfacingSign(float3 worldPos)
 	float3 toCamera = _WorldSpaceCameraPos - worldPos;
 	return sign(dot(toCamera, meshWorldForward));
 }
-#endif // FIXED_NORMALS_BACKFACE_RENDERING
 
-#endif
 
 inline half3 calculateSpriteWorldNormal(VertexInput vertex, float backFaceSign)
 {

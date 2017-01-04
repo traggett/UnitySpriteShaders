@@ -1,6 +1,6 @@
-Shader "Hidden/Internal-SpriteDepthNormalsTexture" {
+Shader "Hidden/Sprite-CameraNormalsTexture" {
 
-// Use this shader to render a DepthNormals texture for a camera with correct sprite normals (using camera.RenderWithShader)
+// Use this shader to render a Normals texture for a camera with correct sprite normals (using camera.RenderWithShader with replacement tag "RenderType")
 
 Properties {
 	_MainTex ("", 2D) = "white" {}
@@ -17,35 +17,111 @@ CGPROGRAM
 #pragma vertex vert
 #pragma fragment frag
 #include "UnityCG.cginc"
-
+#include "ShaderShared.cginc"
 struct v2f {
     float4 pos : SV_POSITION;
 	float2 uv : TEXCOORD0;
     float4 nz : TEXCOORD1;
 	UNITY_VERTEX_OUTPUT_STEREO
 };
-uniform float4 _MainTex_ST;
 uniform float4 _FixedNormal;
 v2f vert( appdata_base v ) {
     v2f o;
 	UNITY_SETUP_INSTANCE_ID(v);
 	UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(o);
     o.pos = UnityObjectToClipPos(v.vertex);
-	o.uv = TRANSFORM_TEX(v.texcoord, _MainTex);
-	o.nz.xyz = _FixedNormal.xyz;
-#if UNITY_REVERSED_Z
-	o.nz.z = -o.nz.z;
-#endif
+	o.uv = calculateTextureCoord(v.texcoord);
+	o.nz.xyz = COMPUTE_VIEW_NORMAL;
 	o.nz.w = COMPUTE_DEPTH_01;
     return o;
 }
-uniform sampler2D _MainTex;
 uniform fixed _Cutoff;
-uniform fixed4 _Color;
 fixed4 frag(v2f i) : SV_Target {
-	fixed4 texcol = tex2D( _MainTex, i.uv );
-	clip( texcol.a*_Color.a - _Cutoff );
-	return EncodeDepthNormal (i.nz.w, i.nz.xyz);
+	fixed4 texcol = calculateTexturePixel(i.uv );
+	float alpha = texcol.a*_Color.a;
+	clip( alpha - _Cutoff );
+	return i.nz;
+}
+ENDCG 
+		}
+	}
+	
+SubShader {
+	Tags { "RenderType"="SpriteViewSpaceFixedNormal" }
+	Pass {
+		Cull Off
+CGPROGRAM
+#pragma target 3.0
+#pragma vertex vert
+#pragma fragment frag
+#include "UnityCG.cginc"
+#include "ShaderShared.cginc"
+#include "SpriteLighting.cginc"
+struct v2f {
+    float4 pos : SV_POSITION;
+	float2 uv : TEXCOORD0;
+    float4 nz : TEXCOORD1;
+	UNITY_VERTEX_OUTPUT_STEREO
+};
+v2f vert( appdata_base v ) {
+    v2f o;
+	UNITY_SETUP_INSTANCE_ID(v);
+	UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(o);
+    o.pos = UnityObjectToClipPos(v.vertex);
+	o.uv = calculateTextureCoord(v.texcoord);
+	o.nz.xyz = getFixedNormal();
+	o.nz.w = COMPUTE_DEPTH_01;
+    return o;
+}
+uniform fixed _Cutoff;
+fixed4 frag(v2f i) : SV_Target {
+	fixed4 texcol = calculateTexturePixel(i.uv );
+	float alpha = texcol.a*_Color.a;
+	clip( alpha - _Cutoff );
+	return i.nz;
+}
+ENDCG 
+		}
+	}
+
+SubShader {
+	Tags { "RenderType"="SpriteModelSpaceFixedNormal" }
+	Pass {
+		Cull Off
+CGPROGRAM
+#pragma target 3.0
+#pragma vertex vert
+#pragma fragment frag
+#include "UnityCG.cginc"
+#include "ShaderShared.cginc"
+#include "SpriteLighting.cginc"
+struct v2f {
+    float4 pos : SV_POSITION;
+	float2 uv : TEXCOORD0;
+    float4 nz : TEXCOORD1;
+	UNITY_VERTEX_OUTPUT_STEREO
+};
+v2f vert( appdata_base v ) {
+    v2f o;
+	UNITY_SETUP_INSTANCE_ID(v);
+	UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(o);
+    o.pos = UnityObjectToClipPos(v.vertex);
+	o.uv = calculateTextureCoord(v.texcoord);
+	float3 worldPos = mul(unity_ObjectToWorld, v.vertex);
+	float3 normal = getFixedNormal();
+//Only do this if backface is enabled :/
+	normal *= calculateBackfacingSign(worldPos.xyz);
+//
+	o.nz.xyz = normalize(mul((float3x3)UNITY_MATRIX_IT_MV, normal));
+	o.nz.w = COMPUTE_DEPTH_01;
+    return o;
+}
+uniform fixed _Cutoff;
+fixed4 frag(v2f i) : SV_Target {
+	fixed4 texcol = calculateTexturePixel(i.uv );
+	float alpha = texcol.a*_Color.a;
+	clip( alpha - _Cutoff );
+	return i.nz;
 }
 ENDCG 
 		}
@@ -74,7 +150,7 @@ v2f vert( appdata_base v ) {
     return o;
 }
 fixed4 frag(v2f i) : SV_Target {
-	return EncodeDepthNormal (i.nz.w, i.nz.xyz);
+	return i.nz;
 }
 ENDCG
 	}
@@ -111,7 +187,7 @@ uniform fixed4 _Color;
 fixed4 frag(v2f i) : SV_Target {
 	fixed4 texcol = tex2D( _MainTex, i.uv );
 	clip( texcol.a*_Color.a - _Cutoff );
-	return EncodeDepthNormal (i.nz.w, i.nz.xyz);
+	return i.nz;
 }
 ENDCG
 	}
@@ -146,7 +222,7 @@ v2f vert( appdata_full v ) {
     return o;
 }
 fixed4 frag( v2f i ) : SV_Target {
-	return EncodeDepthNormal (i.nz.w, i.nz.xyz);
+	return i.nz;
 }
 ENDCG
 	}
@@ -186,7 +262,7 @@ fixed4 frag( v2f i ) : SV_Target {
 	half alpha = tex2D(_MainTex, i.uv).a;
 
 	clip (alpha - _Cutoff);
-	return EncodeDepthNormal (i.nz.w, i.nz.xyz);
+	return i.nz;
 }
 ENDCG
 	}
@@ -223,7 +299,7 @@ v2f vert( appdata v ) {
 	return o;
 }
 fixed4 frag(v2f i) : SV_Target {
-	return EncodeDepthNormal (i.nz.w, i.nz.xyz);
+	return i.nz;
 }
 ENDCG
 	}
@@ -270,7 +346,7 @@ fixed4 frag(v2f i) : SV_Target {
 	half alpha = tex2D(_MainTex, i.uv).a;
 
 	clip (alpha - _Cutoff);
-	return EncodeDepthNormal (i.nz.w, i.nz.xyz);
+	return i.nz;
 }
 ENDCG
 	}
@@ -312,7 +388,7 @@ uniform fixed _Cutoff;
 fixed4 frag(v2f i) : SV_Target {
 	fixed4 texcol = tex2D( _MainTex, i.uv );
 	clip( texcol.a - _Cutoff );
-	return EncodeDepthNormal (i.nz.w, i.nz.xyz);
+	return i.nz;
 }
 ENDCG
 	}
@@ -351,7 +427,7 @@ uniform sampler2D _MainTex;
 fixed4 frag(v2f i) : SV_Target {
 	fixed4 texcol = tex2D( _MainTex, i.uv );
 	clip( texcol.a - 0.001 );
-	return EncodeDepthNormal (i.nz.w, i.nz.xyz);
+	return i.nz;
 }
 ENDCG
 	}
@@ -394,7 +470,7 @@ fixed4 frag(v2f i) : SV_Target {
 	fixed4 texcol = tex2D( _MainTex, i.uv );
 	fixed alpha = texcol.a * i.color.a;
 	clip( alpha - _Cutoff );
-	return EncodeDepthNormal (i.nz.w, i.nz.xyz);
+	return i.nz;
 }
 ENDCG
 	}
@@ -436,7 +512,7 @@ fixed4 frag(v2f i) : SV_Target {
 	fixed4 texcol = tex2D( _MainTex, i.uv );
 	fixed alpha = texcol.a * i.color.a;
 	clip( alpha - _Cutoff );
-	return EncodeDepthNormal (i.nz.w, i.nz.xyz);
+	return i.nz;
 }
 ENDCG
 	}

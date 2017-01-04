@@ -1,6 +1,6 @@
-Shader "Hidden/Internal-SpriteDepthTexture" {
+Shader "Hidden/Sprite-CameraDepthTexture" {
 
-// Use this shader to render a Depth texture for a camera with soft edged Sprites.
+// Use this shader to render a Depth texture for a camera with soft edged Sprites (using camera.RenderWithShader with replacement tag "RenderType")
 // Note the depth is encoded into the pixels RGB not the full RGBA (alpha is needed for blending)
 
 Properties {
@@ -18,7 +18,7 @@ CGPROGRAM
 #pragma target 3.0
 #pragma vertex vert
 #pragma fragment frag
-#include "UnityCG.cginc"
+#include "ShaderShared.cginc"
 #include "ShaderMaths.cginc"
 
 struct v2f {
@@ -27,22 +27,94 @@ struct v2f {
     float depth : TEXCOORD1;
 	UNITY_VERTEX_OUTPUT_STEREO
 };
-uniform float4 _MainTex_ST;
-uniform float4 _FixedNormal;
 v2f vert( appdata_base v ) {
     v2f o;
 	UNITY_SETUP_INSTANCE_ID(v);
 	UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(o);
     o.pos = UnityObjectToClipPos(v.vertex);
-	o.uv = TRANSFORM_TEX(v.texcoord, _MainTex);
+	o.uv = calculateTextureCoord(v.texcoord);
 	o.depth = COMPUTE_DEPTH_01;
     return o;
 }
-uniform sampler2D _MainTex;
 uniform fixed _Cutoff;
-uniform fixed4 _Color;
 fixed4 frag(v2f i) : SV_Target {
-	fixed4 texcol = tex2D( _MainTex, i.uv );
+	fixed4 texcol = calculateTexturePixel(i.uv );
+	float alpha = texcol.a*_Color.a;
+	clip( alpha - _Cutoff );
+	return fixed4(EncodeFloatRGB (i.depth), alpha);
+}
+ENDCG 
+		}
+	}
+	
+SubShader {
+	Tags { "RenderType"="SpriteViewSpaceFixedNormal" }
+	Pass {
+		Cull Off
+		Blend SrcAlpha OneMinusSrcAlpha
+CGPROGRAM
+#pragma target 3.0
+#pragma vertex vert
+#pragma fragment frag
+#include "ShaderShared.cginc"
+#include "ShaderMaths.cginc"
+
+struct v2f {
+    float4 pos : SV_POSITION;
+	float2 uv : TEXCOORD0;
+    float depth : TEXCOORD1;
+	UNITY_VERTEX_OUTPUT_STEREO
+};
+v2f vert( appdata_base v ) {
+    v2f o;
+	UNITY_SETUP_INSTANCE_ID(v);
+	UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(o);
+    o.pos = UnityObjectToClipPos(v.vertex);
+	o.uv = calculateTextureCoord(v.texcoord);
+	o.depth = COMPUTE_DEPTH_01;
+    return o;
+}
+uniform fixed _Cutoff;
+fixed4 frag(v2f i) : SV_Target {
+	fixed4 texcol = calculateTexturePixel(i.uv );
+	float alpha = texcol.a*_Color.a;
+	clip( alpha - _Cutoff );
+	return fixed4(EncodeFloatRGB (i.depth), alpha);
+}
+ENDCG 
+		}
+	}
+	
+SubShader {
+	Tags { "RenderType"="SpriteModelSpaceFixedNormal" }
+	Pass {
+		Cull Off
+		Blend SrcAlpha OneMinusSrcAlpha
+CGPROGRAM
+#pragma target 3.0
+#pragma vertex vert
+#pragma fragment frag
+#include "ShaderShared.cginc"
+#include "ShaderMaths.cginc"
+
+struct v2f {
+    float4 pos : SV_POSITION;
+	float2 uv : TEXCOORD0;
+    float depth : TEXCOORD1;
+	UNITY_VERTEX_OUTPUT_STEREO
+};
+v2f vert( appdata_base v ) {
+    v2f o;
+	UNITY_SETUP_INSTANCE_ID(v);
+	UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(o);
+    o.pos = UnityObjectToClipPos(v.vertex);
+	o.uv = calculateTextureCoord(v.texcoord);
+	o.depth = COMPUTE_DEPTH_01;
+    return o;
+}
+uniform fixed _Cutoff;
+fixed4 frag(v2f i) : SV_Target {
+	fixed4 texcol = calculateTexturePixel(i.uv );
 	float alpha = texcol.a*_Color.a;
 	clip( alpha - _Cutoff );
 	return fixed4(EncodeFloatRGB (i.depth), alpha);
