@@ -4,6 +4,10 @@ An Uber Shader for Unity specialised in rendering Alpha Blended objects like spr
 It has nifty Shader GUI meaning its very easy to use. It's also modular so features you don't use don't impact performance at all.
 Because it supports all its feaures in a one pass Vertex lit mode it suppports lighting for sprites with submeshes (eg Spine animations) whilst preserving soft alpha edges, this includeds per pixel effects like normal mapping and specular.
 
+![Alt text](ReadmeAssets/GUI.png?raw=true "The material editor.")
+
+# Features
+
 ### Lighting
 
 The shader supports both multi-pass Pixel Lighting and single-pass Vertex Lighting as well as simple unlit.
@@ -54,11 +58,11 @@ The shaders allow optional adjustment of hue / saturation and brightness as well
 The shaders allow optional camera-space rim lighting in both lighting modes.
 
 
-## To Use
+# How To Use
 Copy the SpriteShaders folder to anywhere inside your Unity Assets folder. On your objects material click the drop down for shader and select either Sprite (Pixel Lit), Sprite (Vertex Lit) or Sprite (Unlit).
 
 
-## Known Issues
+# Known Issues
 
 When using Unity's Sprite Renderer class, its tangents are incorrect when you use the flip X or flip Y flags. This results in incorrect lighting when using normal maps.
 If you want to use these shaders with a normal map on a Sprite Renderer then either set a negative scale on the objects transform or rotate it instead (with back face culling turned off).
