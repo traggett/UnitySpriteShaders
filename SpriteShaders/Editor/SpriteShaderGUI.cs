@@ -338,7 +338,7 @@ public class SpriteShaderGUI : ShaderGUI
 		if (_blendTexture != null)
 		{
 			EditorGUI.BeginChangeCheck();
-			_materialEditor.TexturePropertySingleLine(new GUIContent("Blend Texture", "When a blend texture is set the albedo will be a mix of the blend texture and main texture based on the blend amount."), _blendTexture, _blendTextureLerp);
+			_materialEditor.TexturePropertySingleLine(new GUIContent("Alt Albedo", "When an alt albedo texture is set the albedo will be a mix of the two textures based on the blend amount."), _blendTexture, _blendTextureLerp);
 			if (EditorGUI.EndChangeCheck())
 			{
 				SetKeyword(_materialEditor, "_TEXTURE_BLEND", _blendTexture != null);
