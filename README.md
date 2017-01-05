@@ -1,8 +1,12 @@
 # Unity Sprite Uber Shader
 
 An Uber Shader for Unity specialised in rendering Alpha Blended objects like sprites.
-It has nifty Shader GUI meaning its very easy to use. It's also modular so features you don't use don't impact performance at all.
-Because it supports all its feaures in a one pass Vertex lit mode it suppports lighting for sprites with submeshes (eg Spine animations) whilst preserving soft alpha edges, this includeds per pixel effects like normal mapping and specular.
+It has a ton of features and a nifty Shader GUI meaning its very easy to use. It's also modular so features you don't use don't impact performance at all.
+Because it supports all its feaures in a one pass Vertex lit mode it can be used on skeleon based animation or sprites with submeshes (eg Spine animations) whilst preserving soft alpha edges, this includeds per pixel effects like normal mapping and specular.
+
+![Alt text](ReadmeAssets/Example.gif?raw=true "Unity's 2d example robot showing bump mapping, specular, emmision and rimp lighting.")
+
+_Above shows single pass normal mapping, specular, emission and rim lighting on Unity's example robot sprite._
 
 ![Alt text](ReadmeAssets/GUI.png?raw=true "The material editor.")
 
