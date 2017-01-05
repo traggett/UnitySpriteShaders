@@ -1,44 +1,64 @@
-# Unity Sprite Shaders
-An Uber Shader specialised for rendering Sprites in Unity.
-Even though it's designed for Sprites it can be used for a whole range of uses. It supports a wide range of optional shader features that won't effect performance unless they are used.
-It also supports per-pixel effects such as normal maps and diffuse ramping whilst using Vertex Lit rendering.
+# Unity Sprite Uber Shader
+
+An Uber Shader for Unity specialised in rendering Alpha Blended objects like sprites.
+It has nifty Shader GUI meaning its very easy to use. It's also modular so features you don't use don't impact performance at all.
+Because it supports all its feaures in a one pass Vertex lit mode it suppports lighting for sprites with submeshes (eg Spine animations) whilst preserving soft alpha edges, this includeds per pixel effects like normal mapping and specular.
 
 ### Lighting
-The shaders support lighting using both Forward Rendering and Vertex Lit Rendering.
-Forward rendering is more accurate but is slower and crucially means the sprite has to write to depth using alpha clipping to avoid overdraw.
-Vertex lit means all lighting can be done in one pass meaning full alpha can be used.
 
-### Normal Mapping
-Normals maps are supported in both lighting modes (in Vertex Lit rendering data for normal mapping is packed into texture channels and then processed per pixel).
+The shader supports both multi-pass Pixel Lighting and single-pass Vertex Lighting as well as simple unlit.
+
+### Normal/Bump Mapping
+
+The shaders support Normal maps even when using single pass Vertex Lighting. For Normals maps to work you need a mesh with Tangents.
 
 ### Blend Modes
-Easily switch between blend modes including pre-multiplied alpha, additive, multiply etc.
 
-### Rim Lighting
-Camera-space rim lighting is supported in both lighting modes.
+The shaders support easily changing the blend mode between Opaque, Standard Alpha, Pre Multiplied Alpha, Additive, Soft Additive, Multiply and Multiply x2 blending modes.
 
-### Diffuse Ramp
-A ramp texture is optionally supported for toon shading effects.
+### Depth Writing
+
+The shaders allow you to optionally write to depth using a Cutoff alpha value. 
+Included are also several shaders that can be used by a camera to render a Depth or DepthNormals texture with soft edged Depth rendered for objects using these shaders that don't write to depth. 
+Meaning you can have Post Effects like Depth of field or Ambient Obscurance working with soft edged sprites.
+
+
+### Specular
+
+The shaders optionally support physically based BRDF specular in both Pixel Lit and single-pass Vertex Lit lighting modes. This is based off the metallic specular in Unity's Standard Shader. (It uses a Metallic Gloss Map and a Smoothness Value).
+
+### Emission
+
+The shaders optionally support an Emission map in both Pixel Lit and single-pass Vertex Lit lighting modes. This again mimics Unity's Standard Shader.
+
+### Fixed Normals 
+
+The shaders optionally support using a Fixed Normal instead of Mesh Normals. This can be usefull for rendering objects that don't have normals (like a TextMesh for example).
+Also sprites can use a view-space Fixed Normal to make it look less flat than using its own normal when it rotates around the Y axis.
+(it stop's it looking like a sheet of paper because it tricks the lighting into thinking its still facing the same way).
+When using a fixed normal the shaders can also automatically flip the tangents of a mesh if its rendering the wrong side of it, meaning normal maps can work for both front and back faces.
 
 ### Shadows
-Shadows are supported using alpha clipping.
-
-### Gradient based Ambient lighting
-Both lighting modes support using a gradient for ambient light. In Vertex Lit mode the Spherical Harmonics is approximated from the ground, equator and sky colors.
-
-### Emission Map
-An optional emission map is supported.
-
-### Camera Space Normals
-As sprites are 2d their normals will always be constant. The shaders allow you to define a fixed normal in camera space rather than pass through mesh normals.
-This not only saves vertex throughput but means lighting looks less 'flat' for rendering sprites with a perspective camera.
-
-### Color Adjustment
-The shaders allow optional adjustment of hue / saturation and brightness as well as applying a solid color overlay effect for flashing a sprite to a solid color (eg for damage effects).
+Shadows are supported in all lighting modes (including unlit) using an alpha cutoff value.
 
 ### Fog
-Fog is optionally supported
+Fog is optionally supported and works correctly with all blend modes.
+
+### Gradient based Ambient lighting
+The shaders optionally support using Spherical Harmonics for ambient lighting. In Vertex Lit mode, the Spherical Harmonics is approximated from the ground, equator and sky ambient colors.
+
+### Color Adjustment
+The shaders allow optional adjustment of hue / saturation and brightness as well as applying a solid color overlay effect this can be used for things like damage effects etc.
+
+### Rim Lighting
+The shaders allow optional camera-space rim lighting in both lighting modes.
 
 
 ## To Use
 Copy the SpriteShaders folder to anywhere inside your Unity Assets folder. On your objects material click the drop down for shader and select either Sprite (Pixel Lit), Sprite (Vertex Lit) or Sprite (Unlit).
+
+
+## Known Issues
+
+When using Unity's Sprite Renderer class, its tangents are incorrect when you use the flip X or flip Y flags. This results in incorrect lighting when using normal maps.
+If you want to use these shaders with a normal map on a Sprite Renderer then either set a negative scale on the objects transform or rotate it instead (with back face culling turned off).
