@@ -60,7 +60,7 @@ inline half getOneMinusReflectivityFromMetallic(half metallic)
 	return oneMinusDielectricSpec - metallic * oneMinusDielectricSpec;
 }
 
-inline SpecularCommonData getSpecularData (float2 uv, half4 texureColor, fixed4 color)
+inline SpecularCommonData getSpecularData(float2 uv, half4 texureColor, fixed4 color)
 {
 	half2 metallicGloss = getMetallicGloss(uv);
 	half metallic = metallicGloss.x;
@@ -100,35 +100,6 @@ inline half PerceptualRoughnessToRoughness(half perceptualRoughness)
 	return perceptualRoughness * perceptualRoughness;
 }
 
-inline half PerceptualRoughnessToSpecPower (half perceptualRoughness)
-{
-	half m = PerceptualRoughnessToRoughness(perceptualRoughness);	// m is the true academic roughness.
-	half sq = max(1e-4f, m*m);
-	half n = (2.0 / sq) - 2.0;							// https://dl.dropboxusercontent.com/u/55891920/papers/mm_brdf.pdf
-	n = max(n, 1e-4f);									// prevent possible cases of pow(0,0), which could happen when roughness is 1.0 and NdotH is zero
-	return n;
-}
-
-// NOTE: Visibility term here is the full form from Torrance-Sparrow model, it includes Geometric term: V = G / (N.L * N.V)
-// This way it is easier to swap Geometric terms and more room for optimizations (except maybe in case of CookTorrance geom term)
-
-// Generic Smith-Schlick visibility term
-inline half SmithVisibilityTerm (half NdotL, half NdotV, half k)
-{
-	half gL = NdotL * (1-k) + k;
-	half gV = NdotV * (1-k) + k;
-	return 1.0 / (gL * gV + 1e-5f); // This function is not intended to be running on Mobile,
-									// therefore epsilon is smaller than can be represented by half
-}
-
-// Smith-Schlick derived for Beckmann
-inline half SmithBeckmannVisibilityTerm (half NdotL, half NdotV, half roughness)
-{
-	half c = 0.797884560802865h; // c = sqrt(2 / Pi)
-	half k = roughness * c;
-	return SmithVisibilityTerm (NdotL, NdotV, k) * 0.25f; // * 0.25 is the 1/4 of the visibility term
-}
-
 // Ref: http://jcgt.org/published/0003/02/03/paper.pdf
 inline half SmithJointGGXVisibilityTerm (half NdotL, half NdotV, half roughness)
 {
@@ -156,18 +127,6 @@ inline half SmithJointGGXVisibilityTerm (half NdotL, half NdotV, half roughness)
 
 	return 0.5f / (lambdaV + lambdaL + 1e-5f);
 #endif
-}
-
-// BlinnPhong normalized as normal distribution function (NDF)
-// for use in micro-facet model: spec=D*G*F
-// eq. 19 in https://dl.dropboxusercontent.com/u/55891920/papers/mm_brdf.pdf
-inline half NDFBlinnPhongNormalizedTerm (half NdotH, half n)
-{
-	// norm = (n+2)/(2*pi)
-	half normTerm = (n + 2.0) * (0.5/UNITY_PI);
-
-	half specTerm = pow (NdotH, n);
-	return specTerm * normTerm;
 }
 
 inline half GGXTerm (half NdotH, half roughness)
@@ -251,14 +210,8 @@ SpecularLightData calculatePhysicsBasedSpecularLight(half3 specColor, half oneMi
 	// BUT 1) that will make shader look significantly darker than Legacy ones
 	// and 2) on engine side "Non-important" lights have to be divided by Pi too in cases when they are injected into ambient SH
 	half roughness = PerceptualRoughnessToRoughness(perceptualRoughness);
-#if UNITY_BRDF_GGX
 	half V = SmithJointGGXVisibilityTerm (nl, nv, roughness);
 	half D = GGXTerm (nh, roughness);
-#else
-	// Legacy
-	half V = SmithBeckmannVisibilityTerm (nl, nv, roughness);
-	half D = NDFBlinnPhongNormalizedTerm (nh, PerceptualRoughnessToSpecPower(perceptualRoughness));
-#endif
 
 	half specularTerm = V*D * UNITY_PI; // Torrance-Sparrow model, Fresnel is applied later
 
@@ -268,9 +221,6 @@ SpecularLightData calculatePhysicsBasedSpecularLight(half3 specColor, half oneMi
 
 	// specularTerm * nl can be NaN on Metal in some cases, use max() to make sure it's a sane value
 	specularTerm = max(0, specularTerm * nl);
-#if defined(_SPECULARHIGHLIGHTS_OFF)
-	specularTerm = 0.0;
-#endif
 
 	// surfaceReduction = Int D(NdotH) * NdotH * Id(NdotL>0) dH = 1/(roughness^2+1)
 	half surfaceReduction;
