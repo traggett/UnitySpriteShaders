@@ -20,10 +20,10 @@ Shader "Sprite (Vertex Lit)"
 		_DiffuseRamp ("Diffuse Ramp Texture", 2D) = "gray" {}
 		
 		_FixedNormal ("Fixed Normal", Vector) = (0,0,-1,1)
-		[ToggleOff] _ZWrite ("Depth Write", Float) = 0.0
+		_ZWrite ("Depth Write", Float) = 0.0
 		_Cutoff ("Depth alpha cutoff", Range(0,1)) = 0.0
 		_ShadowAlphaCutoff ("Shadow alpha cutoff", Range(0,1)) = 0.1
-		[ToggleOff] _CustomRenderQueue ("Custom Render Queue", Float) = 0.0
+		_CustomRenderQueue ("Custom Render Queue", Float) = 0.0
 		
 		_OverlayColor ("Overlay Color", Color) = (0,0,0,0)
 		_Hue("Hue", Range(-0.5,0.5)) = 0.0
