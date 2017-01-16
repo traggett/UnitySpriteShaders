@@ -55,6 +55,7 @@ public class SpriteShaderGUI : ShaderGUI
 	private MaterialProperty _shadowAlphaCutoff = null;
 	private MaterialProperty _renderQueue = null;
 	private MaterialProperty _culling = null;
+	private MaterialProperty _customRenderQueue = null;
 
 	private MaterialProperty _overlayColor = null;
 	private MaterialProperty _hue = null;
@@ -115,6 +116,7 @@ public class SpriteShaderGUI : ShaderGUI
 		_shadowAlphaCutoff = FindProperty("_ShadowAlphaCutoff", props);
 		_renderQueue = FindProperty("_RenderQueue", props);
 		_culling = FindProperty("_Cull", props);
+		_customRenderQueue = FindProperty("_CustomRenderQueue", props);
 
 		_bumpMap = FindProperty("_BumpMap", props, false);
 		_diffuseRamp = FindProperty("_DiffuseRamp", props, false);
@@ -364,7 +366,7 @@ public class SpriteShaderGUI : ShaderGUI
 		bool mixedValue = _writeToDepth.hasMixedValue;
 		EditorGUI.showMixedValue = mixedValue;
 		bool writeTodepth = EditorGUILayout.Toggle(new GUIContent("Write to Depth", "Write to Depth Buffer by clipping alpha."), _writeToDepth.floatValue != 0.0f);
-		EditorGUI.showMixedValue = false;
+		
 		if (EditorGUI.EndChangeCheck())
 		{
 			SetInt("_ZWrite", writeTodepth ? 1 : 0);
@@ -379,6 +381,42 @@ public class SpriteShaderGUI : ShaderGUI
 			_materialEditor.RangeProperty(_depthAlphaCutoff, "Depth Alpha Cutoff");
 			dataChanged |= EditorGUI.EndChangeCheck();
 		}
+
+		
+		{
+			bool useCustomRenderType = _customRenderQueue.floatValue > 0.0f;
+			EditorGUI.BeginChangeCheck();
+			EditorGUI.showMixedValue = _customRenderQueue.hasMixedValue;
+			useCustomRenderType = EditorGUILayout.Toggle("Use Custom RenderType tags", useCustomRenderType);
+			if (EditorGUI.EndChangeCheck())
+			{
+				dataChanged = true;
+
+				_customRenderQueue.floatValue = useCustomRenderType ? 1.0f : 0.0f;
+
+				foreach (Material material in _materialEditor.targets)
+				{
+					eBlendMode blendMode = GetMaterialBlendMode(material);
+
+					switch (blendMode)
+					{
+						case eBlendMode.Opaque:
+							{
+								SetRenderType(material, "Opaque", useCustomRenderType);
+							}
+							break;
+						default:
+							{
+								bool zWrite = material.GetFloat("_ZWrite") > 0.0f;
+								SetRenderType(material, zWrite ? "TransparentCutout" : "Transparent", useCustomRenderType);
+							}
+							break;
+					}
+				}
+			}	
+		}
+
+		EditorGUI.showMixedValue = false;
 
 		return dataChanged;
 	}
@@ -702,32 +740,38 @@ public class SpriteShaderGUI : ShaderGUI
 		material.SetInt("_Cull", (int)eCulling.Off);
 	}
 
-	private static void SetRenderQueue(Material material, string queue)
+	//Z write is on then
+
+	private static void SetRenderType(Material material, string renderType, bool useCustomRenderQueue)
 	{
+		//Want a check box to say if should use Sprite render queue (for custom writing depth and normals)
 		bool zWrite = material.GetFloat("_ZWrite") > 0.0f;
 
-		//If sprite has fixed normals then assign custom render type so we can write its correct normal with soft edges
-		eNormalsMode normalsMode = GetMaterialNormalsMode(material);
-
-		switch (normalsMode)
+		if (useCustomRenderQueue)
 		{
-			case eNormalsMode.FixedNormalsViewSpace: queue = "SpriteViewSpaceFixedNormal"; break;
-			case eNormalsMode.FixedNormalsModelSpace: queue = "SpriteModelSpaceFixedNormal"; break;
-			case eNormalsMode.MeshNormals:
-				{
-					//If sprite doesn't write to depth assign custom render type so we can write its depth with soft edges
-					if (!zWrite)
+			//If sprite has fixed normals then assign custom render type so we can write its correct normal with soft edges
+			eNormalsMode normalsMode = GetMaterialNormalsMode(material);
+
+			switch (normalsMode)
+			{
+				case eNormalsMode.FixedNormalsViewSpace: renderType = "SpriteViewSpaceFixedNormal"; break;
+				case eNormalsMode.FixedNormalsModelSpace: renderType = "SpriteModelSpaceFixedNormal"; break;
+				case eNormalsMode.MeshNormals:
 					{
-						queue = "Sprite";
+						//If sprite doesn't write to depth assign custom render type so we can write its depth with soft edges
+						if (!zWrite)
+						{
+							renderType = "Sprite";
+						}
 					}
-				}
-				break;
+					break;
+			}
 		}
 
 		//If we don't write to depth set tag so custom shaders can write to depth themselves
 		material.SetOverrideTag("AlphaDepth", zWrite ? "False" : "True");
 
-		material.SetOverrideTag("RenderType", queue);
+		material.SetOverrideTag("RenderType", renderType);
 	}
 
 	private static void SetMaterialKeywords(Material material)
@@ -832,14 +876,15 @@ public class SpriteShaderGUI : ShaderGUI
 		SetKeyword(material, "_ADDITIVEBLEND_SOFT", blendMode == eBlendMode.SoftAdditive);
 
 		int renderQueue;
-
+		bool useCustomRenderQueue = material.GetFloat("_CustomRenderQueue") > 0.0f;
+		
 		switch (blendMode)
 		{
 			case eBlendMode.Opaque:
 				{
 					material.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.One);
 					material.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.Zero);
-					SetRenderQueue(material, "Opaque");
+					SetRenderType(material, "Opaque", useCustomRenderQueue);
 					renderQueue = kSolidQueue;
 				}
 				break;
@@ -848,7 +893,7 @@ public class SpriteShaderGUI : ShaderGUI
 					material.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
 					material.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.One);
 					bool zWrite = material.GetFloat("_ZWrite") > 0.0f;
-					SetRenderQueue(material, zWrite ? "TransparentCutout" : "Transparent");
+					SetRenderType(material, zWrite ? "TransparentCutout" : "Transparent", useCustomRenderQueue);
 					renderQueue = zWrite ? kAlphaTestQueue : kTransparentQueue;
 				}
 				break;
@@ -857,7 +902,7 @@ public class SpriteShaderGUI : ShaderGUI
 					material.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.One);
 					material.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcColor);
 					bool zWrite = material.GetFloat("_ZWrite") > 0.0f;
-					SetRenderQueue(material, zWrite ? "TransparentCutout" : "Transparent");
+					SetRenderType(material, zWrite ? "TransparentCutout" : "Transparent", useCustomRenderQueue);
 					renderQueue = zWrite ? kAlphaTestQueue : kTransparentQueue;
 				}
 				break;
@@ -866,7 +911,7 @@ public class SpriteShaderGUI : ShaderGUI
 					material.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.Zero);
 					material.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.SrcColor);
 					bool zWrite = material.GetFloat("_ZWrite") > 0.0f;
-					SetRenderQueue(material, zWrite ? "TransparentCutout" : "Transparent");
+					SetRenderType(material, zWrite ? "TransparentCutout" : "Transparent", useCustomRenderQueue);
 					renderQueue = zWrite ? kAlphaTestQueue : kTransparentQueue;
 				}
 				break;
@@ -875,7 +920,7 @@ public class SpriteShaderGUI : ShaderGUI
 					material.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.DstColor);
 					material.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.SrcColor);
 					bool zWrite = material.GetFloat("_ZWrite") > 0.0f;
-					SetRenderQueue(material, zWrite ? "TransparentCutout" : "Transparent");
+					SetRenderType(material, zWrite ? "TransparentCutout" : "Transparent", useCustomRenderQueue);
 					renderQueue = zWrite ? kAlphaTestQueue : kTransparentQueue;
 				}
 				break;
@@ -886,7 +931,7 @@ public class SpriteShaderGUI : ShaderGUI
 					material.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.One);
 					material.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
 					bool zWrite = material.GetFloat("_ZWrite") > 0.0f;
-					SetRenderQueue(material, zWrite ? "TransparentCutout" : "Transparent");
+					SetRenderType(material, zWrite ? "TransparentCutout" : "Transparent", useCustomRenderQueue);
 					renderQueue = zWrite ? kAlphaTestQueue : kTransparentQueue;
 				}
 				break;
