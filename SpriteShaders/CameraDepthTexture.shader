@@ -18,8 +18,8 @@ CGPROGRAM
 #pragma target 3.0
 #pragma vertex vert
 #pragma fragment frag
-#include "ShaderShared.cginc"
-#include "ShaderMaths.cginc"
+#include "CGIncludes/ShaderShared.cginc"
+#include "CGIncludes/ShaderMaths.cginc"
 
 struct v2f {
     float4 pos : SV_POSITION;
@@ -56,8 +56,8 @@ CGPROGRAM
 #pragma target 3.0
 #pragma vertex vert
 #pragma fragment frag
-#include "ShaderShared.cginc"
-#include "ShaderMaths.cginc"
+#include "CGIncludes/ShaderShared.cginc"
+#include "CGIncludes/ShaderMaths.cginc"
 
 struct v2f {
     float4 pos : SV_POSITION;
@@ -94,8 +94,8 @@ CGPROGRAM
 #pragma target 3.0
 #pragma vertex vert
 #pragma fragment frag
-#include "ShaderShared.cginc"
-#include "ShaderMaths.cginc"
+#include "CGIncludes/ShaderShared.cginc"
+#include "CGIncludes/ShaderMaths.cginc"
 
 struct v2f {
     float4 pos : SV_POSITION;
@@ -131,7 +131,7 @@ CGPROGRAM
 #pragma vertex vert
 #pragma fragment frag
 #include "UnityCG.cginc"
-#include "ShaderMaths.cginc"
+#include "CGIncludes/ShaderMaths.cginc"
 struct v2f {
     float4 pos : SV_POSITION;
     float depth : TEXCOORD1;
@@ -160,7 +160,7 @@ CGPROGRAM
 #pragma vertex vert
 #pragma fragment frag
 #include "UnityCG.cginc" 
-#include "ShaderMaths.cginc"
+#include "CGIncludes/ShaderMaths.cginc"
 struct v2f {
     float4 pos : SV_POSITION;
 	float2 uv : TEXCOORD0;
@@ -197,7 +197,7 @@ CGPROGRAM
 #pragma vertex vert
 #pragma fragment frag
 #include "UnityCG.cginc" 
-#include "ShaderMaths.cginc"
+#include "CGIncludes/ShaderMaths.cginc"
 #include "Lighting.cginc"
 #include "UnityBuiltin3xTreeLibrary.cginc"
 struct v2f {
@@ -232,7 +232,7 @@ CGPROGRAM
 #pragma vertex vert
 #pragma fragment frag
 #include "UnityCG.cginc" 
-#include "ShaderMaths.cginc"
+#include "CGIncludes/ShaderMaths.cginc"
 #include "Lighting.cginc"
 #include "UnityBuiltin3xTreeLibrary.cginc"
 struct v2f {
@@ -272,7 +272,7 @@ CGPROGRAM
 #pragma vertex vert
 #pragma fragment frag
 #include "UnityCG.cginc" 
-#include "ShaderMaths.cginc"
+#include "CGIncludes/ShaderMaths.cginc"
 #include "TerrainEngine.cginc"
 struct v2f {
 	float4 pos : SV_POSITION;
@@ -310,7 +310,7 @@ CGPROGRAM
 #pragma vertex vert
 #pragma fragment frag
 #include "UnityCG.cginc" 
-#include "ShaderMaths.cginc"
+#include "CGIncludes/ShaderMaths.cginc"
 #include "TerrainEngine.cginc"
 
 struct v2f {
@@ -353,7 +353,7 @@ CGPROGRAM
 #pragma vertex vert
 #pragma fragment frag
 #include "UnityCG.cginc" 
-#include "ShaderMaths.cginc"
+#include "CGIncludes/ShaderMaths.cginc"
 #include "TerrainEngine.cginc"
 
 struct v2f {
@@ -400,7 +400,7 @@ CGPROGRAM
 #pragma vertex vert
 #pragma fragment frag
 #include "UnityCG.cginc" 
-#include "ShaderMaths.cginc"
+#include "CGIncludes/ShaderMaths.cginc"
 #include "TerrainEngine.cginc"
 struct v2f {
 	float4 pos : SV_POSITION;
@@ -438,7 +438,7 @@ CGPROGRAM
 #pragma vertex vert
 #pragma fragment frag
 #include "UnityCG.cginc" 
-#include "ShaderMaths.cginc"
+#include "CGIncludes/ShaderMaths.cginc"
 #include "TerrainEngine.cginc"
 
 struct v2f {
@@ -481,7 +481,7 @@ CGPROGRAM
 #pragma vertex vert
 #pragma fragment frag
 #include "UnityCG.cginc" 
-#include "ShaderMaths.cginc"
+#include "CGIncludes/ShaderMaths.cginc"
 #include "TerrainEngine.cginc"
 struct v2f {
 	float4 pos : SV_POSITION;

@@ -33,6 +33,25 @@ inline half3 calculateWorldNormal(float3 normal)
 #if defined(_NORMALMAP)
 
 uniform sampler2D _BumpMap;
+uniform half _BumpScale;
+
+half3 UnpackScaleNormal(half4 packednormal, half bumpScale)
+{
+	#if defined(UNITY_NO_DXT5nm)
+		return packednormal.xyz * 2 - 1;
+	#else
+		half3 normal;
+		normal.xy = (packednormal.wy * 2 - 1);
+		#if (SHADER_TARGET >= 30)
+			// SM2.0: instruction count limitation
+			// SM2.0: normal scaler is not supported
+			normal.xy *= bumpScale;
+		#endif
+		normal.z = sqrt(1.0 - saturate(dot(normal.xy, normal.xy)));
+		return normal;
+	#endif
+}		
+
 
 inline half3 calculateWorldTangent(float4 tangent)
 {
@@ -50,7 +69,7 @@ inline half3 calculateWorldBinormal(half3 normalWorld, half3 tangentWorld, float
 
 inline half3 calculateNormalFromBumpMap(float2 texUV, half3 tangentWorld, half3 binormalWorld, half3 normalWorld)
 {
-	half3 localNormal = UnpackNormal(tex2D(_BumpMap, texUV));
+	half3 localNormal = UnpackScaleNormal(tex2D(_BumpMap, texUV), _BumpScale);
 	half3x3 rotation = half3x3(tangentWorld, binormalWorld, normalWorld);
 	half3 normal = normalize(mul(localNormal, rotation));
 	return normal;

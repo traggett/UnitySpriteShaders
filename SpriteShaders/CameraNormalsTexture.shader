@@ -17,7 +17,7 @@ CGPROGRAM
 #pragma vertex vert
 #pragma fragment frag
 #include "UnityCG.cginc"
-#include "ShaderShared.cginc"
+#include "CGIncludes/ShaderShared.cginc"
 struct v2f {
     float4 pos : SV_POSITION;
 	float2 uv : TEXCOORD0;
@@ -55,8 +55,8 @@ CGPROGRAM
 #pragma vertex vert
 #pragma fragment frag
 #include "UnityCG.cginc"
-#include "ShaderShared.cginc"
-#include "SpriteLighting.cginc"
+#include "CGIncludes/ShaderShared.cginc"
+#include "CGIncludes/SpriteLighting.cginc"
 struct v2f {
     float4 pos : SV_POSITION;
 	float2 uv : TEXCOORD0;
@@ -93,8 +93,8 @@ CGPROGRAM
 #pragma vertex vert
 #pragma fragment frag
 #include "UnityCG.cginc"
-#include "ShaderShared.cginc"
-#include "SpriteLighting.cginc"
+#include "CGIncludes/ShaderShared.cginc"
+#include "CGIncludes/SpriteLighting.cginc"
 struct v2f {
     float4 pos : SV_POSITION;
 	float2 uv : TEXCOORD0;

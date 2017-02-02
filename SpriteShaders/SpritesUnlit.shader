@@ -55,7 +55,7 @@ Shader "Sprite (Unlit)"
 				#pragma vertex vert
 				#pragma fragment frag
 				
-				#include "SpriteUnlit.cginc"
+				#include "CGIncludes/SpriteUnlit.cginc"
 			ENDCG
 		}
 		Pass
@@ -79,7 +79,7 @@ Shader "Sprite (Unlit)"
 				#pragma vertex vert
 				#pragma fragment frag
 				
-				#include "SpriteShadows.cginc"
+				#include "CGIncludes/SpriteShadows.cginc"
 			ENDCG
 		}
 	}

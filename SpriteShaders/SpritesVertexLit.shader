@@ -4,6 +4,8 @@ Shader "Sprite (Vertex Lit)"
 	{
 		_MainTex ("Main Texture", 2D) = "white" {}
 		_Color ("Color", Color) = (1,1,1,1)
+		
+		_BumpScale("Scale", Float) = 1.0
 		_BumpMap ("Normal Map", 2D) = "bump" {}
 		
 		[MaterialToggle] PixelSnap ("Pixel snap", Float) = 0
@@ -82,7 +84,7 @@ Shader "Sprite (Vertex Lit)"
 				#pragma vertex vert
 				#pragma fragment frag
 				
-				#include "SpriteVertexLighting.cginc"	
+				#include "CGIncludes/SpriteVertexLighting.cginc"	
 			ENDCG
 		}
 		Pass
@@ -106,7 +108,7 @@ Shader "Sprite (Vertex Lit)"
 				#pragma vertex vert
 				#pragma fragment frag
 				
-				#include "SpriteShadows.cginc"
+				#include "CGIncludes/SpriteShadows.cginc"
 			ENDCG
 		}
 	}

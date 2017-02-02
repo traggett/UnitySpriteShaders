@@ -66,9 +66,10 @@ public class SpriteShaderGUI : ShaderGUI
 	private MaterialProperty _rimColor = null;
 
 	private MaterialProperty _bumpMap = null;
+	private MaterialProperty _bumpScale = null;
 	private MaterialProperty _diffuseRamp = null;
 	private MaterialProperty _fixedNormal = null;
-	
+
 	private MaterialProperty _blendTexture = null;
 	private MaterialProperty _blendTextureLerp = null;
 
@@ -80,6 +81,59 @@ public class SpriteShaderGUI : ShaderGUI
 	private MaterialProperty _metallicGlossMap = null;
 	private MaterialProperty _smoothness = null;
 	private MaterialProperty _smoothnessScale = null;
+
+	private static GUIContent _albedoText = new GUIContent("Albedo", "Albedo (RGB) and Transparency (A)");
+	private static GUIContent _altAlbedoText = new GUIContent("Secondary Albedo", "When a secondary albedo texture is set the albedo will be a blended mix of the two textures based on the blend value.");
+	private static GUIContent _metallicMapText = new GUIContent("Metallic", "Metallic (R) and Smoothness (A)");
+	private static GUIContent _smoothnessText = new GUIContent("Smoothness", "Smoothness value");
+	private static GUIContent _smoothnessScaleText = new GUIContent("Smoothness", "Smoothness scale factor");
+	private static GUIContent _normalMapText = new GUIContent("Normal Map", "Normal Map");
+	private static GUIContent _emissionText = new GUIContent("Emission", "Emission (RGB)");
+	private static GUIContent _emissionPowerText = new GUIContent("Emission Power");
+	private static GUIContent _emissionToggleText = new GUIContent("Enable Emission");
+	private static GUIContent _diffuseRampText = new GUIContent("Diffuse Ramp", "A black and white gradient can be used to create a 'Toon Shading' effect.");
+	private static GUIContent _depthText = new GUIContent("Write to Depth", "Write to Depth Buffer by clipping alpha.");
+	private static GUIContent _depthAlphaCutoffText = new GUIContent("Depth Alpha Cutoff", "Threshold for depth write alpha cutoff");
+	private static GUIContent _shadowAlphaCutoffText = new GUIContent("Shadow Alpha Cutoff", "Threshold for shadow alpha cutoff");
+	private static GUIContent _fixedNormalText = new GUIContent("Use Fixed Normal", "If this is ticked instead of requiring mesh normals a Fixed Normal will be used instead (it's quicker and can result in better looking lighting effects on 2d objects).");
+	private static GUIContent _fixedNormalDirectionText = new GUIContent("Fixed Normal Direction", "Should normally be (0,0,-1) if in view-space or (0,0,1) if in model-space.");
+	private static GUIContent _adjustBackfaceTangentText = new GUIContent("Adjust Back-face Tangents", "Tick only if you are going to rotate the sprite to face away from the camera, the tangents will be flipped when this is the case to make lighting correct.");
+	private static GUIContent _sphericalHarmonicsText = new GUIContent("Enable Spherical Harmonics", "Enable to use spherical harmonics to calculate ambient light / light probes. In vertex-lit mode this will be approximated from scenes ambient trilight settings.");
+	private static GUIContent _lightingModeText = new GUIContent("Lighting Mode", "Lighting Mode");
+	private static GUIContent[] _lightingModeOptions = new GUIContent[] { new GUIContent("Vertex Lit"), new GUIContent("Pixel Lit"), new GUIContent("Unlit") };
+	private static GUIContent _blendModeText = new GUIContent("Blend Mode", "Blend Mode");
+	private static GUIContent[] _blendModeOptions = new GUIContent[] { new GUIContent("Pre-Multiplied Alpha"), new GUIContent("Standard Alpha"), new GUIContent("Opaque"), new GUIContent("Additive"), new GUIContent("Soft Additive"), new GUIContent("Multiply"), new GUIContent("Multiply x2") };
+	private static GUIContent _rendererQueueText = new GUIContent("Renderer Queue");
+	private static GUIContent _cullingModeText = new GUIContent("Culling Mode");
+	private static GUIContent[] _cullingModeOptions = new GUIContent[] { new GUIContent("Off"), new GUIContent("Back"), new GUIContent("Front") };
+	private static GUIContent _pixelSnapText = new GUIContent("Pixel Snap");
+	private static GUIContent _customRenderTypetagsText = new GUIContent("Use Custom RenderType tags");
+	private static GUIContent _fixedNormalSpaceText = new GUIContent("Fixed Normal Space");
+	private static GUIContent[] _fixedNormalSpaceOptions = new GUIContent[] { new GUIContent("View-Space"), new GUIContent("Model-Space") };
+	private static GUIContent _rimLightingToggleText = new GUIContent("Enable Rim Lighting");
+	private static GUIContent _rimColorText = new GUIContent("Rim Color");
+	private static GUIContent _rimPowerText = new GUIContent("Rim Power");
+	private static GUIContent _specularToggleText = new GUIContent("Enable Specular");
+	private static GUIContent _colorAdjustmentToggleText = new GUIContent("Enable Color Adjustment");
+	private static GUIContent _colorAdjustmentColorText = new GUIContent("Overlay Color");
+	private static GUIContent _colorAdjustmentHueText = new GUIContent("Hue");
+	private static GUIContent _colorAdjustmentSaturationText = new GUIContent("Saturation");
+	private static GUIContent _colorAdjustmentBrightnessText = new GUIContent("Brightness");
+	private static GUIContent _fogToggleText = new GUIContent("Enable Fog");
+	private static GUIContent _meshRequiresTangentsText = new GUIContent("Note: Material requires a mesh with tangents.");
+	private static GUIContent _meshRequiresNormalsText = new GUIContent("Note: Material requires a mesh with normals.");
+	private static GUIContent _meshRequiresNormalsAndTangentsText = new GUIContent("Note: Material requires a mesh with Normals and Tangents.");
+
+	private static string _primaryMapsText = "Main Maps";
+	private static string _specularText = "Specular";
+	private static string _emissionLabelText = "Emission";
+	private static string _depthLabelText = "Depth";
+	private static string _normalText = "Fixed Normals";
+	private static string _shadowsText = "Shadows";
+	private static string _ambientSphericalHarmonicsText = "Ambient Spherical Harmonics";
+	private static string _fogText = "Fog";
+	private static string _colorAdjustmentText = "Color Adjustment";
+	private static string _rimLightingText = "Rim Lighting";
 
 	#region ShaderGUI
 	public override void OnGUI(MaterialEditor materialEditor, MaterialProperty[] props)
@@ -119,6 +173,7 @@ public class SpriteShaderGUI : ShaderGUI
 		_customRenderQueue = FindProperty("_CustomRenderQueue", props);
 
 		_bumpMap = FindProperty("_BumpMap", props, false);
+		_bumpScale = FindProperty("_BumpScale", props, false);
 		_diffuseRamp = FindProperty("_DiffuseRamp", props, false);
 		_fixedNormal = FindProperty("_FixedNormal", props, false);
 		_blendTexture = FindProperty("_BlendTex", props, false);
@@ -152,14 +207,14 @@ public class SpriteShaderGUI : ShaderGUI
 		// Detect any changes to the material
 		bool dataChanged = RenderModes();
 
-		GUILayout.Label("Main Maps", EditorStyles.boldLabel);
+		GUILayout.Label(_primaryMapsText, EditorStyles.boldLabel);
 		{
 			dataChanged |= RenderTextureProperties();
 		}
 
 		if (_metallic != null)
 		{
-			GUILayout.Label("Specular", EditorStyles.boldLabel);
+			GUILayout.Label(_specularText, EditorStyles.boldLabel);
 			{
 				dataChanged |= RenderSpecularProperties();
 			}
@@ -167,49 +222,49 @@ public class SpriteShaderGUI : ShaderGUI
 
 		if (_emissionMap != null && _emissionColor != null)
 		{
-			GUILayout.Label("Emission", EditorStyles.boldLabel);
+			GUILayout.Label(_emissionLabelText, EditorStyles.boldLabel);
 			{
 				dataChanged |= RenderEmissionProperties();
 			}
 		}
 
-		GUILayout.Label("Depth", EditorStyles.boldLabel);
+		GUILayout.Label(_depthLabelText, EditorStyles.boldLabel);
 		{
 			dataChanged |= RenderDepthProperties();
 		}
 
 		if (_fixedNormal != null)
 		{
-			GUILayout.Label("Normals", EditorStyles.boldLabel);
+			GUILayout.Label(_normalText, EditorStyles.boldLabel);
 			dataChanged |= RenderNormalsProperties();
 		}
 
-		GUILayout.Label("Shadows", EditorStyles.boldLabel);
+		GUILayout.Label(_shadowsText, EditorStyles.boldLabel);
 		{
 			dataChanged |= RenderShadowsProperties();
 		}
 
 		if (_fixedNormal != null)
 		{
-			GUILayout.Label("Ambient Spherical Harmonics", EditorStyles.boldLabel);
+			GUILayout.Label(_ambientSphericalHarmonicsText, EditorStyles.boldLabel);
 			{
 				dataChanged |= RenderSphericalHarmonicsProperties();
 			}
 		}
 
-		GUILayout.Label("Fog", EditorStyles.boldLabel);
+		GUILayout.Label(_fogText, EditorStyles.boldLabel);
 		{
 			dataChanged |= RenderFogProperties();
 		}
 
-		GUILayout.Label("Color Adjustment", EditorStyles.boldLabel);
+		GUILayout.Label(_colorAdjustmentText, EditorStyles.boldLabel);
 		{
 			dataChanged |= RenderColorProperties();
 		}
 
 		if (_rimColor != null)
 		{
-			GUILayout.Label("Rim Lighting", EditorStyles.boldLabel);
+			GUILayout.Label(_rimLightingText, EditorStyles.boldLabel);
 			dataChanged |= RenderRimLightingProperties();
 		}
 
@@ -235,10 +290,10 @@ public class SpriteShaderGUI : ShaderGUI
 				{
 					EditorGUI.showMixedValue = true;
 					break;
-				}			
+				}
 			}
 
-			lightMode = (eLightMode)EditorGUILayout.Popup("Lighting Mode", (int)lightMode, Enum.GetNames(typeof(eLightMode)));
+			lightMode = (eLightMode)EditorGUILayout.Popup(_lightingModeText, (int)lightMode, _lightingModeOptions);
 			if (EditorGUI.EndChangeCheck())
 			{
 				foreach (Material material in _materialEditor.targets)
@@ -278,7 +333,7 @@ public class SpriteShaderGUI : ShaderGUI
 			}
 
 			EditorGUI.BeginChangeCheck();
-			blendMode = (eBlendMode)EditorGUILayout.Popup("Blend Mode", (int)blendMode, Enum.GetNames(typeof(eBlendMode)));
+			blendMode = (eBlendMode)EditorGUILayout.Popup(_blendModeText, (int)blendMode, _blendModeOptions);
 			if (EditorGUI.EndChangeCheck())
 			{
 				foreach (Material mat in _materialEditor.targets)
@@ -288,11 +343,11 @@ public class SpriteShaderGUI : ShaderGUI
 
 				dataChanged = true;
 			}
-		}	
+		}
 
 		EditorGUI.BeginChangeCheck();
 		EditorGUI.showMixedValue = _renderQueue.hasMixedValue;
-		int renderQueue = EditorGUILayout.IntSlider("Renderer Queue", (int)_renderQueue.floatValue, 0, 49);
+		int renderQueue = EditorGUILayout.IntSlider(_rendererQueueText, (int)_renderQueue.floatValue, 0, 49);
 		if (EditorGUI.EndChangeCheck())
 		{
 			SetInt("_RenderQueue", renderQueue);
@@ -302,7 +357,7 @@ public class SpriteShaderGUI : ShaderGUI
 		EditorGUI.BeginChangeCheck();
 		eCulling culling = (eCulling)Mathf.RoundToInt(_culling.floatValue);
 		EditorGUI.showMixedValue = _culling.hasMixedValue;
-		culling = (eCulling)EditorGUILayout.EnumPopup("Culling", culling);
+		culling = (eCulling)EditorGUILayout.Popup(_cullingModeText, (int)culling, _cullingModeOptions);
 		if (EditorGUI.EndChangeCheck())
 		{
 			SetInt("_Cull", (int)culling);
@@ -312,7 +367,7 @@ public class SpriteShaderGUI : ShaderGUI
 		EditorGUI.showMixedValue = false;
 
 		EditorGUI.BeginChangeCheck();
-		_materialEditor.ShaderProperty(_pixelSnap, "Pixel Snap");
+		_materialEditor.ShaderProperty(_pixelSnap, _pixelSnapText);
 		if (EditorGUI.EndChangeCheck())
 		{
 			dataChanged = true;
@@ -327,20 +382,20 @@ public class SpriteShaderGUI : ShaderGUI
 
 		EditorGUI.BeginChangeCheck();
 
-		_materialEditor.TexturePropertySingleLine(new GUIContent("Albedo"), _mainTexture, _color);
+		_materialEditor.TexturePropertySingleLine(_albedoText, _mainTexture, _color);
 
 		if (_bumpMap != null)
-			_materialEditor.TexturePropertySingleLine(new GUIContent("Normal Map"), _bumpMap);
+			_materialEditor.TexturePropertySingleLine(_normalMapText, _bumpMap, _bumpMap.textureValue != null ? _bumpScale : null);
 
 		if (_diffuseRamp != null)
-			_materialEditor.TexturePropertySingleLine(new GUIContent("Diffuse Ramp", "A black and white gradient can be used to create a 'Toon Shading' effect."), _diffuseRamp);
+			_materialEditor.TexturePropertySingleLine(_diffuseRampText, _diffuseRamp);
 
 		dataChanged |= EditorGUI.EndChangeCheck();
 
 		if (_blendTexture != null)
 		{
 			EditorGUI.BeginChangeCheck();
-			_materialEditor.TexturePropertySingleLine(new GUIContent("Alt Albedo", "When an alt albedo texture is set the albedo will be a mix of the two textures based on the blend amount."), _blendTexture, _blendTextureLerp);
+			_materialEditor.TexturePropertySingleLine(_altAlbedoText, _blendTexture, _blendTextureLerp);
 			if (EditorGUI.EndChangeCheck())
 			{
 				SetKeyword(_materialEditor, "_TEXTURE_BLEND", _blendTexture != null);
@@ -355,18 +410,18 @@ public class SpriteShaderGUI : ShaderGUI
 		EditorGUI.showMixedValue = false;
 
 		return dataChanged;
-	}	
+	}
 
 	protected virtual bool RenderDepthProperties()
 	{
 		bool dataChanged = false;
-		
+
 		EditorGUI.BeginChangeCheck();
 
 		bool mixedValue = _writeToDepth.hasMixedValue;
 		EditorGUI.showMixedValue = mixedValue;
-		bool writeTodepth = EditorGUILayout.Toggle(new GUIContent("Write to Depth", "Write to Depth Buffer by clipping alpha."), _writeToDepth.floatValue != 0.0f);
-		
+		bool writeTodepth = EditorGUILayout.Toggle(_depthText, _writeToDepth.floatValue != 0.0f);
+
 		if (EditorGUI.EndChangeCheck())
 		{
 			SetInt("_ZWrite", writeTodepth ? 1 : 0);
@@ -374,20 +429,20 @@ public class SpriteShaderGUI : ShaderGUI
 			mixedValue = false;
 			dataChanged = true;
 		}
-		
-		if (writeTodepth && !mixedValue && GetMaterialBlendMode((Material)_materialEditor.target) != eBlendMode.Opaque) 
+
+		if (writeTodepth && !mixedValue && GetMaterialBlendMode((Material)_materialEditor.target) != eBlendMode.Opaque)
 		{
 			EditorGUI.BeginChangeCheck();
-			_materialEditor.RangeProperty(_depthAlphaCutoff, "Depth Alpha Cutoff");
+			_materialEditor.RangeProperty(_depthAlphaCutoff, _depthAlphaCutoffText.text);
 			dataChanged |= EditorGUI.EndChangeCheck();
 		}
 
-		
+
 		{
 			bool useCustomRenderType = _customRenderQueue.floatValue > 0.0f;
 			EditorGUI.BeginChangeCheck();
 			EditorGUI.showMixedValue = _customRenderQueue.hasMixedValue;
-			useCustomRenderType = EditorGUILayout.Toggle("Use Custom RenderType tags", useCustomRenderType);
+			useCustomRenderType = EditorGUILayout.Toggle(_depthAlphaCutoffText, useCustomRenderType);
 			if (EditorGUI.EndChangeCheck())
 			{
 				dataChanged = true;
@@ -413,7 +468,7 @@ public class SpriteShaderGUI : ShaderGUI
 							break;
 					}
 				}
-			}	
+			}
 		}
 
 		EditorGUI.showMixedValue = false;
@@ -438,8 +493,8 @@ public class SpriteShaderGUI : ShaderGUI
 
 		EditorGUI.BeginChangeCheck();
 		EditorGUI.showMixedValue = mixedNormalsMode;
-		bool fixedNormals = EditorGUILayout.Toggle(new GUIContent("Use Fixed Normal", "If this is ticked instead of requiring mesh normals a Fixed Normal will be used instead (it's quicker and can result in better looking lighting effects on 2d objects)."),
-													normalsMode != eNormalsMode.MeshNormals);
+		bool fixedNormals = EditorGUILayout.Toggle(_fixedNormalText, normalsMode != eNormalsMode.MeshNormals);
+
 		if (EditorGUI.EndChangeCheck())
 		{
 			normalsMode = fixedNormals ? eNormalsMode.FixedNormalsViewSpace : eNormalsMode.MeshNormals;
@@ -454,7 +509,7 @@ public class SpriteShaderGUI : ShaderGUI
 			//Show drop down for normals space
 			EditorGUI.BeginChangeCheck();
 			EditorGUI.showMixedValue = mixedNormalsMode;
-			normalsMode = (eNormalsMode)EditorGUILayout.Popup("Fixed Normal Space", (int)normalsMode, new string[]{"ViewSpace", "ModelSpace"});
+			normalsMode = (eNormalsMode)EditorGUILayout.Popup(_fixedNormalSpaceText, (int)normalsMode, _fixedNormalSpaceOptions);
 			if (EditorGUI.EndChangeCheck())
 			{
 				SetNormalsMode((Material)_materialEditor.target, normalsMode, GetMaterialFixedNormalsBackfaceRenderingOn((Material)_materialEditor.target));
@@ -465,7 +520,7 @@ public class SpriteShaderGUI : ShaderGUI
 				}
 
 				//Reset fixed normal to default (Vector3.forward for model-space, -Vector3.forward for view-space).
-				_fixedNormal.vectorValue =  new Vector4(0.0f, 0.0f, normalsMode == eNormalsMode.FixedNormalsViewSpace ? -1.0f : 1.0f, 1.0f);
+				_fixedNormal.vectorValue = new Vector4(0.0f, 0.0f, normalsMode == eNormalsMode.FixedNormalsViewSpace ? -1.0f : 1.0f, 1.0f);
 
 				mixedNormalsMode = false;
 				dataChanged = true;
@@ -474,7 +529,7 @@ public class SpriteShaderGUI : ShaderGUI
 			//Show fixed normal
 			EditorGUI.BeginChangeCheck();
 			EditorGUI.showMixedValue = _fixedNormal.hasMixedValue;
-			Vector3 normal = EditorGUILayout.Vector3Field(new GUIContent("Fixed Normal Direction", "Should normally be (0,0,-1) if in view-space or (0,0,1) if in model-space."), _fixedNormal.vectorValue);
+			Vector3 normal = EditorGUILayout.Vector3Field(_fixedNormalDirectionText, _fixedNormal.vectorValue);
 			if (EditorGUI.EndChangeCheck())
 			{
 				_fixedNormal.vectorValue = new Vector4(normal.x, normal.y, normal.z, 1.0f);
@@ -496,26 +551,26 @@ public class SpriteShaderGUI : ShaderGUI
 
 				EditorGUI.BeginChangeCheck();
 				EditorGUI.showMixedValue = mixedBackFaceRendering;
-				bool backRendering = EditorGUILayout.Toggle(new GUIContent("Adjust Backface Tangents", "Tick only if you are going to rotate the sprite to face away from the camera, the tangents will be flipped when this is the case to make lighting correct."),
-															fixBackFaceRendering);
+				bool backRendering = EditorGUILayout.Toggle(_adjustBackfaceTangentText, fixBackFaceRendering);
+
 				if (EditorGUI.EndChangeCheck())
 				{
 					SetNormalsMode(_materialEditor, normalsMode, backRendering);
 					dataChanged = true;
 				}
 			}
-			
+
 		}
 
 		EditorGUI.showMixedValue = false;
 
 		return dataChanged;
 	}
-	
+
 	protected virtual bool RenderShadowsProperties()
 	{
 		EditorGUI.BeginChangeCheck();
-		_materialEditor.RangeProperty(_shadowAlphaCutoff, "Shadow Alpha Cutoff");
+		_materialEditor.RangeProperty(_shadowAlphaCutoff, _shadowAlphaCutoffText.text);
 		return EditorGUI.EndChangeCheck();
 	}
 
@@ -525,7 +580,7 @@ public class SpriteShaderGUI : ShaderGUI
 		bool mixedValue;
 		bool enabled = IsKeywordEnabled(_materialEditor, "_SPHERICAL_HARMONICS", out mixedValue);
 		EditorGUI.showMixedValue = mixedValue;
-		enabled = EditorGUILayout.Toggle(new GUIContent("Enable Spherical Harmonics", "Enable to use spherical harmonics to calculate ambient light / light probes. In vertex-lit mode this will be approximated from scenes ambient trilight settings."), enabled);
+		enabled = EditorGUILayout.Toggle(_sphericalHarmonicsText, enabled);
 		EditorGUI.showMixedValue = false;
 
 		if (EditorGUI.EndChangeCheck())
@@ -543,7 +598,7 @@ public class SpriteShaderGUI : ShaderGUI
 		bool mixedValue;
 		bool fog = IsKeywordEnabled(_materialEditor, "_FOG", out mixedValue);
 		EditorGUI.showMixedValue = mixedValue;
-		fog = EditorGUILayout.Toggle("Enable Fog", fog);
+		fog = EditorGUILayout.Toggle(_fogToggleText, fog);
 		EditorGUI.showMixedValue = false;
 
 		if (EditorGUI.EndChangeCheck())
@@ -563,7 +618,7 @@ public class SpriteShaderGUI : ShaderGUI
 		bool mixedValue;
 		bool colorAdjust = IsKeywordEnabled(_materialEditor, "_COLOR_ADJUST", out mixedValue);
 		EditorGUI.showMixedValue = mixedValue;
-		colorAdjust = EditorGUILayout.Toggle("Enable Color Adjustment", colorAdjust);
+		colorAdjust = EditorGUILayout.Toggle(_colorAdjustmentToggleText, colorAdjust);
 		EditorGUI.showMixedValue = false;
 		if (EditorGUI.EndChangeCheck())
 		{
@@ -575,10 +630,10 @@ public class SpriteShaderGUI : ShaderGUI
 		if (colorAdjust && !mixedValue)
 		{
 			EditorGUI.BeginChangeCheck();
-			_materialEditor.ColorProperty(_overlayColor, "Overlay Color");
-			_materialEditor.RangeProperty(_hue, "Hue");
-			_materialEditor.RangeProperty(_saturation, "Saturation");
-			_materialEditor.RangeProperty(_brightness, "Brightness");
+			_materialEditor.ColorProperty(_overlayColor, _colorAdjustmentColorText.text);
+			_materialEditor.RangeProperty(_hue, _colorAdjustmentHueText.text);
+			_materialEditor.RangeProperty(_saturation, _colorAdjustmentSaturationText.text);
+			_materialEditor.RangeProperty(_brightness, _colorAdjustmentBrightnessText.text);
 			dataChanged |= EditorGUI.EndChangeCheck();
 		}
 
@@ -597,7 +652,7 @@ public class SpriteShaderGUI : ShaderGUI
 
 		EditorGUI.BeginChangeCheck();
 		EditorGUI.showMixedValue = mixedValue;
-		bool specularEnabled = EditorGUILayout.Toggle("Enable Specular", specular || specularGlossMap);
+		bool specularEnabled = EditorGUILayout.Toggle(_specularToggleText, specular || specularGlossMap);
 		EditorGUI.showMixedValue = false;
 		if (EditorGUI.EndChangeCheck())
 		{
@@ -616,7 +671,7 @@ public class SpriteShaderGUI : ShaderGUI
 		{
 			EditorGUI.BeginChangeCheck();
 			bool hasGlossMap = _metallicGlossMap.textureValue != null;
-			_materialEditor.TexturePropertySingleLine(new GUIContent("Metallic Gloss Map"), _metallicGlossMap, hasGlossMap ? null : _metallic);
+			_materialEditor.TexturePropertySingleLine(_metallicMapText, _metallicGlossMap, hasGlossMap ? null : _metallic);
 			if (EditorGUI.EndChangeCheck())
 			{
 				hasGlossMap = _metallicGlossMap.textureValue != null;
@@ -627,7 +682,7 @@ public class SpriteShaderGUI : ShaderGUI
 			}
 
 			int indentation = 2;
-			_materialEditor.ShaderProperty(hasGlossMap ? _smoothnessScale : _smoothness, "Smoothness", indentation);
+			_materialEditor.ShaderProperty(hasGlossMap ? _smoothnessScale : _smoothness, hasGlossMap ? _smoothnessScaleText : _smoothnessText, indentation);
 		}
 
 		return dataChanged;
@@ -642,7 +697,7 @@ public class SpriteShaderGUI : ShaderGUI
 
 		EditorGUI.BeginChangeCheck();
 		EditorGUI.showMixedValue = mixedValue;
-		emission = EditorGUILayout.Toggle("Enable Emission", emission);
+		emission = EditorGUILayout.Toggle(_emissionToggleText, emission);
 		EditorGUI.showMixedValue = false;
 		if (EditorGUI.EndChangeCheck())
 		{
@@ -654,8 +709,8 @@ public class SpriteShaderGUI : ShaderGUI
 		if (emission && !mixedValue)
 		{
 			EditorGUI.BeginChangeCheck();
-			_materialEditor.TexturePropertyWithHDRColor(new GUIContent("Emission"), _emissionMap, _emissionColor, new ColorPickerHDRConfig(0, 1, 0.01010101f, 3), true);
-			_materialEditor.FloatProperty(_emissionPower, "Emission Power");
+			_materialEditor.TexturePropertyWithHDRColor(_emissionText, _emissionMap, _emissionColor, new ColorPickerHDRConfig(0, 1, 0.01010101f, 3), true);
+			_materialEditor.FloatProperty(_emissionPower, _emissionPowerText.text);
 			dataChanged |= EditorGUI.EndChangeCheck();
 		}
 
@@ -671,7 +726,7 @@ public class SpriteShaderGUI : ShaderGUI
 
 		EditorGUI.BeginChangeCheck();
 		EditorGUI.showMixedValue = mixedValue;
-		rimLighting = EditorGUILayout.Toggle("Enable Rim Lighting", rimLighting);
+		rimLighting = EditorGUILayout.Toggle(_rimLightingToggleText.text, rimLighting);
 		EditorGUI.showMixedValue = false;
 		if (EditorGUI.EndChangeCheck())
 		{
@@ -683,8 +738,8 @@ public class SpriteShaderGUI : ShaderGUI
 		if (rimLighting && !mixedValue)
 		{
 			EditorGUI.BeginChangeCheck();
-			_materialEditor.ColorProperty(_rimColor, "Rim Color");
-			_materialEditor.FloatProperty(_rimPower, "Rim Power");
+			_materialEditor.ColorProperty(_rimColor, _rimColorText.text);
+			_materialEditor.FloatProperty(_rimPower, _rimPowerText.text);
 			dataChanged |= EditorGUI.EndChangeCheck();
 		}
 
@@ -701,15 +756,7 @@ public class SpriteShaderGUI : ShaderGUI
 
 		if (requiresNormals || requiresTangents)
 		{
-			string text = "Note: Material requires a mesh with ";
-
-			if (requiresNormals)
-				text += "Normals";
-
-			if (requiresTangents)
-				text += requiresNormals ? " and Tangents" : "Tangents";
-
-			GUILayout.Label(text + ".", GUI.skin.GetStyle("helpBox"));
+			GUILayout.Label(requiresNormals && requiresTangents ? _meshRequiresNormalsAndTangentsText : requiresNormals ? _meshRequiresNormalsText : _meshRequiresTangentsText, GUI.skin.GetStyle("helpBox"));
 		}
 	}
 
@@ -720,7 +767,7 @@ public class SpriteShaderGUI : ShaderGUI
 			material.SetInt(propertyName, value);
 		}
 	}
-	
+
 	private void SetDefaultSpriteKeywords(Material material, Shader shader)
 	{
 		//Disable emission by default (is set on by default in standard shader)
@@ -781,10 +828,10 @@ public class SpriteShaderGUI : ShaderGUI
 
 		bool zWrite = material.GetFloat("_ZWrite") > 0.0f;
 		bool clipAlpha = zWrite && blendMode != eBlendMode.Opaque && material.GetFloat("_Cutoff") > 0.0f;
-		SetKeyword(material, "_ALPHA_CLIP", clipAlpha);		
+		SetKeyword(material, "_ALPHA_CLIP", clipAlpha);
 
 		bool normalMap = material.HasProperty("_BumpMap") && material.GetTexture("_BumpMap") != null;
-		SetKeyword (material, "_NORMALMAP", normalMap);
+		SetKeyword(material, "_NORMALMAP", normalMap);
 
 		bool diffuseRamp = material.HasProperty("_DiffuseRamp") && material.GetTexture("_DiffuseRamp") != null;
 		SetKeyword(material, "_DIFFUSE_RAMP", diffuseRamp);
@@ -794,7 +841,7 @@ public class SpriteShaderGUI : ShaderGUI
 	}
 
 	private static void MaterialChanged(MaterialEditor materialEditor)
-	{	
+	{
 		foreach (Material material in materialEditor.targets)
 			SetMaterialKeywords(material);
 	}
@@ -806,13 +853,13 @@ public class SpriteShaderGUI : ShaderGUI
 			SetKeyword(material, keyword, state);
 		}
 	}
-	
+
 	private static void SetKeyword(Material m, string keyword, bool state)
 	{
 		if (state)
-			m.EnableKeyword (keyword);
+			m.EnableKeyword(keyword);
 		else
-			m.DisableKeyword (keyword);
+			m.DisableKeyword(keyword);
 	}
 
 	private static bool IsKeywordEnabled(MaterialEditor editor, string keyword, out bool mixedValue)
@@ -877,7 +924,7 @@ public class SpriteShaderGUI : ShaderGUI
 
 		int renderQueue;
 		bool useCustomRenderQueue = material.GetFloat("_CustomRenderQueue") > 0.0f;
-		
+
 		switch (blendMode)
 		{
 			case eBlendMode.Opaque:
