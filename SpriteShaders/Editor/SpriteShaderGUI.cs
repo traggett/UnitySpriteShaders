@@ -32,8 +32,8 @@ public class SpriteShaderGUI : ShaderGUI
 	private enum eCulling
 	{
 		Off = 0,
-		Back = 2,
 		Front = 1,
+		Back = 2,
 	};
 
 	private enum eNormalsMode
@@ -105,7 +105,7 @@ public class SpriteShaderGUI : ShaderGUI
 	private static GUIContent[] _blendModeOptions = new GUIContent[] { new GUIContent("Pre-Multiplied Alpha"), new GUIContent("Standard Alpha"), new GUIContent("Opaque"), new GUIContent("Additive"), new GUIContent("Soft Additive"), new GUIContent("Multiply"), new GUIContent("Multiply x2") };
 	private static GUIContent _rendererQueueText = new GUIContent("Renderer Queue");
 	private static GUIContent _cullingModeText = new GUIContent("Culling Mode");
-	private static GUIContent[] _cullingModeOptions = new GUIContent[] { new GUIContent("Off"), new GUIContent("Back"), new GUIContent("Front") };
+	private static GUIContent[] _cullingModeOptions = new GUIContent[] { new GUIContent("Off"), new GUIContent("Front"), new GUIContent("Back")};
 	private static GUIContent _pixelSnapText = new GUIContent("Pixel Snap");
 	private static GUIContent _customRenderTypetagsText = new GUIContent("Use Custom RenderType tags");
 	private static GUIContent _fixedNormalSpaceText = new GUIContent("Fixed Normal Space");
