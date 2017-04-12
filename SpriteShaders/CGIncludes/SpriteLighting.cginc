@@ -33,29 +33,22 @@ struct VertexInput
 // Normal functions
 //
 
-uniform float4 _FixedNormal = float4(0, 0, -1, 1);
+uniform float4 _FixedNormal = float4(0, 0, 1, 1);
 
 inline float3 getFixedNormal()
 {
-	float3 normal = _FixedNormal.xyz;
-#if UNITY_REVERSED_Z
-	normal.z = -normal.z;
-#endif
-	return normal;
+	return _FixedNormal.xyz;
 }
 
 inline float calculateBackfacingSign(float3 worldPos)
 {
 	//If we're using fixed normals and mesh is facing away from camera, flip tangentSign
-	float3 forward = float3(0,0,1);
-#if UNITY_REVERSED_Z
-	forward.z = -forward.z;
-#endif	
-	float3 meshWorldForward = mul((float3x3)unity_ObjectToWorld, forward);
+	//Unity uses a left handed coordinate system so camera always looks down the negative z axis
+	float3 cameraForward = float3(0,0,-1);
+	float3 meshWorldForward = mul((float3x3)unity_ObjectToWorld, cameraForward);
 	float3 toCamera = _WorldSpaceCameraPos - worldPos;
 	return sign(dot(toCamera, meshWorldForward));
 }
-
 
 inline half3 calculateSpriteWorldNormal(VertexInput vertex, float backFaceSign)
 {

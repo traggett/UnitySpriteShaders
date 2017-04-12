@@ -21,7 +21,7 @@ Shader "Sprite (Vertex Lit)"
 		
 		_DiffuseRamp ("Diffuse Ramp Texture", 2D) = "gray" {}
 		
-		_FixedNormal ("Fixed Normal", Vector) = (0,0,-1,1)
+		_FixedNormal ("Fixed Normal", Vector) = (0,0,1,1)
 		_ZWrite ("Depth Write", Float) = 0.0
 		_Cutoff ("Depth alpha cutoff", Range(0,1)) = 0.0
 		_ShadowAlphaCutoff ("Shadow alpha cutoff", Range(0,1)) = 0.1

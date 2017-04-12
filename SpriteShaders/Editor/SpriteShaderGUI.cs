@@ -96,7 +96,7 @@ public class SpriteShaderGUI : ShaderGUI
 	private static GUIContent _depthAlphaCutoffText = new GUIContent("Depth Alpha Cutoff", "Threshold for depth write alpha cutoff");
 	private static GUIContent _shadowAlphaCutoffText = new GUIContent("Shadow Alpha Cutoff", "Threshold for shadow alpha cutoff");
 	private static GUIContent _fixedNormalText = new GUIContent("Use Fixed Normal", "If this is ticked instead of requiring mesh normals a Fixed Normal will be used instead (it's quicker and can result in better looking lighting effects on 2d objects).");
-	private static GUIContent _fixedNormalDirectionText = new GUIContent("Fixed Normal Direction", "Should normally be (0,0,-1) if in view-space or (0,0,1) if in model-space.");
+	private static GUIContent _fixedNormalDirectionText = new GUIContent("Fixed Normal Direction", "Should normally be (0,0,1) if in view-space or (0,0,-1) if in model-space.");
 	private static GUIContent _adjustBackfaceTangentText = new GUIContent("Adjust Back-face Tangents", "Tick only if you are going to rotate the sprite to face away from the camera, the tangents will be flipped when this is the case to make lighting correct.");
 	private static GUIContent _sphericalHarmonicsText = new GUIContent("Enable Spherical Harmonics", "Enable to use spherical harmonics to calculate ambient light / light probes. In vertex-lit mode this will be approximated from scenes ambient trilight settings.");
 	private static GUIContent _lightingModeText = new GUIContent("Lighting Mode", "Lighting Mode");
@@ -520,7 +520,7 @@ public class SpriteShaderGUI : ShaderGUI
 				}
 
 				//Reset fixed normal to default (Vector3.forward for model-space, -Vector3.forward for view-space).
-				_fixedNormal.vectorValue = new Vector4(0.0f, 0.0f, normalsMode == eNormalsMode.FixedNormalsViewSpace ? -1.0f : 1.0f, 1.0f);
+				_fixedNormal.vectorValue = new Vector4(0.0f, 0.0f, normalsMode == eNormalsMode.FixedNormalsViewSpace ? 1.0f : -1.0f, 1.0f);
 
 				mixedNormalsMode = false;
 				dataChanged = true;
