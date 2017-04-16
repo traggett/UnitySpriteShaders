@@ -114,6 +114,8 @@ struct VertexOutput
 #if defined(_FOG)
 	UNITY_FOG_COORDS(_FOG_COORD_INDEX)
 #endif // _FOG
+
+	UNITY_VERTEX_OUTPUT_STEREO
 };
 
 ////////////////////////////////////////
@@ -335,6 +337,9 @@ inline fixed3 calculateLightDiffuse(int index, float3 viewPos, half3 viewNormal)
 VertexOutput vert(VertexInput input)
 {
 	VertexOutput output;
+	
+	UNITY_SETUP_INSTANCE_ID(input);
+    UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(output);
 	
 	output.pos = calculateLocalPos(input.vertex);
 	output.color = calculateVertexColor(input.color);

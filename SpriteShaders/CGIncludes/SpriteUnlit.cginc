@@ -12,6 +12,8 @@ struct VertexInput
 	float4 vertex : POSITION;
 	float4 texcoord : TEXCOORD0;
 	fixed4 color : COLOR;
+	
+	UNITY_VERTEX_INPUT_INSTANCE_ID
 };
 
 struct VertexOutput
@@ -22,6 +24,8 @@ struct VertexOutput
 #if defined(_FOG)
 	UNITY_FOG_COORDS(1)
 #endif // _FOG	
+
+	UNITY_VERTEX_OUTPUT_STEREO
 };
 
 ////////////////////////////////////////
@@ -31,6 +35,9 @@ struct VertexOutput
 VertexOutput vert(VertexInput input)
 {
 	VertexOutput output;
+	
+	UNITY_SETUP_INSTANCE_ID(input);
+    UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(output);
 	
 	output.pos = calculateLocalPos(input.vertex);	
 	output.texcoord = calculateTextureCoord(input.texcoord);

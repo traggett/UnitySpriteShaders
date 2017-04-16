@@ -3,6 +3,28 @@
 
 #include "UnityCG.cginc"
 
+#ifdef UNITY_INSTANCING_ENABLED
+
+    UNITY_INSTANCING_CBUFFER_START(PerDrawSprite)
+        // SpriteRenderer.Color while Non-Batched/Instanced.
+        fixed4 unity_SpriteRendererColorArray[UNITY_INSTANCED_ARRAY_SIZE];
+        // this could be smaller but that's how bit each entry is regardless of type
+        float4 unity_SpriteFlipArray[UNITY_INSTANCED_ARRAY_SIZE];
+    UNITY_INSTANCING_CBUFFER_END
+
+    #define _RendererColor unity_SpriteRendererColorArray[unity_InstanceID]
+    #define _Flip unity_SpriteFlipArray[unity_InstanceID]
+
+#endif // instancing
+
+CBUFFER_START(UnityPerDrawSprite)
+#ifndef UNITY_INSTANCING_ENABLED
+    fixed4 _RendererColor;
+    float4 _Flip;
+#endif
+    float _EnableExternalAlpha;
+CBUFFER_END
+
 ////////////////////////////////////////
 // Space functions
 //
@@ -14,10 +36,16 @@ inline float4 calculateWorldPos(float4 vertex)
 
 inline float4 calculateLocalPos(float4 vertex)
 {
+#ifdef UNITY_INSTANCING_ENABLED
+    vertex.xy *= _Flip.xy;
+#endif
+
 	float4 pos = UnityObjectToClipPos(vertex);
+	
 #ifdef PIXELSNAP_ON
 	pos = UnityPixelSnap(pos);
 #endif
+
 	return pos;
 }
 
@@ -423,9 +451,9 @@ inline fixed4 calculateTexturePixel(float2 texcoord)
 #endif // !_TEXTURE_BLEND
 
 #if ETC1_EXTERNAL_ALPHA
-	// get the color from an external texture (usecase: Alpha support for ETC1 on android)
-	pixel.a = tex2D (_AlphaTex, texcoord).r;
-#endif //ETC1_EXTERNAL_ALPHA
+    fixed4 alpha = tex2D (_AlphaTex, texcoord);
+    pixel.a = lerp (pixel.a, alpha.r, _EnableExternalAlpha);
+#endif
 
 #if defined(_COLOR_ADJUST)
 	pixel = adjustColor(pixel);

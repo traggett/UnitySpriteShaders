@@ -42,6 +42,8 @@ struct VertexOutput
 #if defined(_FOG)
 	UNITY_FOG_COORDS(_FOG_COORD_INDEX)
 #endif // _FOG	
+
+	UNITY_VERTEX_OUTPUT_STEREO
 };
 
 ////////////////////////////////////////
@@ -127,6 +129,9 @@ fixed4 calculateSpecularLightAdditive(SpecularCommonData s, float3 viewDir, floa
 VertexOutput vert(VertexInput v)
 {
 	VertexOutput output;
+	
+	UNITY_SETUP_INSTANCE_ID(input);
+    UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(output);
 	
 	output.pos = calculateLocalPos(v.vertex);
 	output.color = calculateVertexColor(v.color);
