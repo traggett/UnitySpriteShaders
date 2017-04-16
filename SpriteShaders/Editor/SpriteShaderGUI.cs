@@ -499,7 +499,7 @@ public class SpriteShaderGUI : ShaderGUI
 		{
 			normalsMode = fixedNormals ? eNormalsMode.FixedNormalsViewSpace : eNormalsMode.MeshNormals;
 			SetNormalsMode(_materialEditor, normalsMode, false);
-			_fixedNormal.vectorValue = new Vector4(0.0f, 0.0f, -1.0f, 1.0f);
+			_fixedNormal.vectorValue = new Vector4(0.0f, 0.0f, normalsMode == eNormalsMode.FixedNormalsViewSpace ? 1.0f : -1.0f, 1.0f);
 			mixedNormalsMode = false;
 			dataChanged = true;
 		}
@@ -774,10 +774,10 @@ public class SpriteShaderGUI : ShaderGUI
 		SetKeyword(material, "_EMISSION", false);
 		//Start with preMultiply alpha by default
 		SetBlendMode(material, eBlendMode.PreMultipliedAlpha);
-		//Start with view space fixed normal by default
-		SetNormalsMode(material, eNormalsMode.FixedNormalsViewSpace, false);
+		//Start with mesh normals by default
+		SetNormalsMode(material, eNormalsMode.MeshNormals, false);
 		if (_fixedNormal != null)
-			_fixedNormal.vectorValue = new Vector4(0.0f, 0.0f, -1.0f, 1.0f);
+			_fixedNormal.vectorValue = new Vector4(0.0f, 0.0f, 1.0f, 1.0f);
 		//Start with spherical harmonics disabled?
 		SetKeyword(material, "_SPHERICAL_HARMONICS", false);
 		//Start with specular disabled
@@ -785,6 +785,8 @@ public class SpriteShaderGUI : ShaderGUI
 		SetKeyword(material, "_SPECULAR_GLOSSMAP", false);
 		//Start with Culling disabled
 		material.SetInt("_Cull", (int)eCulling.Off);
+		//Start with Z writing disabled
+		material.SetInt("_ZWrite", 0);
 	}
 
 	//Z write is on then
