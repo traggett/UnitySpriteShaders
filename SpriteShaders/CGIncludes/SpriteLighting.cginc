@@ -26,7 +26,8 @@ struct VertexInput
 #if defined(_NORMALMAP)
 	float4 tangent : TANGENT;
 #endif // _NORMALMAP
-
+	
+	UNITY_VERTEX_INPUT_INSTANCE_ID
 };
 
 ////////////////////////////////////////
