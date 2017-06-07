@@ -143,7 +143,7 @@ inline fixed3 calculateRampedDiffuse(fixed3 lightColor, float attenuation, float
 {
 	float d = angleDot * 0.5 + 0.5;
 #if defined(HARD_DIFFUSE_RAMP)
-	half3 ramp = calculateDiffuseRamp(d * attenuation * 2);
+	half3 ramp = calculateDiffuseRamp(d * attenuation * 2 - 1);
 	return lightColor * ramp;
 #else
 	half3 ramp = calculateDiffuseRamp(d);
