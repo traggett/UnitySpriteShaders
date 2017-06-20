@@ -14,7 +14,7 @@ Shader "Sprite (Vertex Lit)"
 		
 		_EmissionColor("Color", Color) = (0,0,0,0)
 		_EmissionMap("Emission", 2D) = "white" {}
-		_EmissionPower("Emission Power", Float) = 2.0	
+		_EmissionPower("Emission Power", Float) = 1.0	
 		
 		_Glossiness("Smoothness", Range(0.0, 1.0)) = 0.5
 		_GlossMapScale("Smoothness Scale", Range(0.0, 1.0)) = 1.0
