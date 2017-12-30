@@ -701,7 +701,7 @@ public class SpriteShaderGUI : ShaderGUI
 		if (emission && !mixedValue)
 		{
 			EditorGUI.BeginChangeCheck();
-			_materialEditor.TexturePropertyWithHDRColor(_emissionText, _emissionMap, _emissionColor, new ColorPickerHDRConfig(0, 1, 0.01010101f, 3), true);
+			_materialEditor.TexturePropertyWithHDRColor(_emissionText, _emissionMap, _emissionColor, new ColorPickerHDRConfig(0f, 99f, 1 / 99f, 3f), true);
 			_materialEditor.FloatProperty(_emissionPower, _emissionPowerText.text);
 			dataChanged |= EditorGUI.EndChangeCheck();
 		}
