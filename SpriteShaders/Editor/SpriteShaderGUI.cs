@@ -42,7 +42,7 @@ public class SpriteShaderGUI : ShaderGUI
 		FixedNormalsModelSpace = 1,
 	};
 
-	private MaterialEditor _materialEditor;
+	protected MaterialEditor _materialEditor;
 
 	private MaterialProperty _mainTexture = null;
 	private MaterialProperty _color = null;
@@ -257,56 +257,20 @@ public class SpriteShaderGUI : ShaderGUI
 			dataChanged |= RenderRimLightingProperties();
 		}
 
+		dataChanged |= RenderCustomProperties();
+
 		if (dataChanged)
 		{
 			MaterialChanged(_materialEditor);
 		}
 	}
-
+	
 	protected virtual bool RenderModes()
 	{
 		bool dataChanged = false;
 
 		//Lighting Mode
-		{
-			EditorGUI.BeginChangeCheck();
-
-			eLightMode lightMode = GetMaterialLightMode((Material)_materialEditor.target);
-			EditorGUI.showMixedValue = false;
-			foreach (Material material in _materialEditor.targets)
-			{
-				if (lightMode != GetMaterialLightMode(material))
-				{
-					EditorGUI.showMixedValue = true;
-					break;
-				}
-			}
-
-			lightMode = (eLightMode)EditorGUILayout.Popup(_lightingModeText, (int)lightMode, _lightingModeOptions);
-			if (EditorGUI.EndChangeCheck())
-			{
-				foreach (Material material in _materialEditor.targets)
-				{
-					switch (lightMode)
-					{
-						case eLightMode.VertexLit:
-							if (material.shader.name != kShaderVertexLit)
-								_materialEditor.SetShader(Shader.Find(kShaderVertexLit), false);
-							break;
-						case eLightMode.PixelLit:
-							if (material.shader.name != kShaderPixelLit)
-								_materialEditor.SetShader(Shader.Find(kShaderPixelLit), false);
-							break;
-						case eLightMode.Unlit:
-							if (material.shader.name != kShaderUnlit)
-								_materialEditor.SetShader(Shader.Find(kShaderUnlit), false);
-							break;
-					}
-				}
-
-				dataChanged = true;
-			}
-		}
+		dataChanged |= RenderLightingModes();
 
 		//Blend Mode
 		{
@@ -367,6 +331,57 @@ public class SpriteShaderGUI : ShaderGUI
 		}
 
 		return dataChanged;
+	}
+
+	protected virtual bool RenderLightingModes()
+	{
+		bool dataChanged = false;
+
+		EditorGUI.BeginChangeCheck();
+
+		eLightMode lightMode = GetMaterialLightMode((Material)_materialEditor.target);
+		EditorGUI.showMixedValue = false;
+		foreach (Material material in _materialEditor.targets)
+		{
+			if (lightMode != GetMaterialLightMode(material))
+			{
+				EditorGUI.showMixedValue = true;
+				break;
+			}
+		}
+
+		lightMode = (eLightMode)EditorGUILayout.Popup(_lightingModeText, (int)lightMode, _lightingModeOptions);
+		if (EditorGUI.EndChangeCheck())
+		{
+			foreach (Material material in _materialEditor.targets)
+			{
+				switch (lightMode)
+				{
+					case eLightMode.VertexLit:
+						if (material.shader.name != kShaderVertexLit)
+							_materialEditor.SetShader(Shader.Find(kShaderVertexLit), false);
+						break;
+					case eLightMode.PixelLit:
+						if (material.shader.name != kShaderPixelLit)
+							_materialEditor.SetShader(Shader.Find(kShaderPixelLit), false);
+						break;
+					case eLightMode.Unlit:
+						if (material.shader.name != kShaderUnlit)
+							_materialEditor.SetShader(Shader.Find(kShaderUnlit), false);
+						break;
+				}
+			}
+
+			dataChanged = true;
+		}
+
+		return dataChanged;
+	}
+
+
+	protected virtual bool RenderCustomProperties()
+	{
+		return false;
 	}
 
 	protected virtual bool RenderTextureProperties()
