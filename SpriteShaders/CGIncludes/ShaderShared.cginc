@@ -90,9 +90,7 @@ inline half3 calculateWorldTangent(float4 tangent)
 
 inline half3 calculateWorldBinormal(half3 normalWorld, half3 tangentWorld, float tangentSign)
 {
-	//When calculating the binormal we have to flip it when the mesh is scaled negatively.
-	//Normally this would just be unity_WorldTransformParams.w but this isn't set correctly by Unity for its SpriteRenderer meshes so get from objectToWorld matrix scale instead.
-	half worldTransformSign = sign(unity_ObjectToWorld[0][0] * unity_ObjectToWorld[1][1] * unity_ObjectToWorld[2][2]);
+	half worldTransformSign = unity_WorldTransformParams.w;
 	half sign = tangentSign * worldTransformSign;
 	return cross(normalWorld, tangentWorld) * sign;
 }
