@@ -126,7 +126,6 @@ public class SpriteShaderGUI : ShaderGUI
 	private static string _primaryMapsText = "Main Maps";
 	private static string _depthLabelText = "Depth";
 	private static string _shadowsText = "Shadows";
-	private static string _customRenderType = "Use Custom RenderType";
 
 	#region ShaderGUI
 	public override void OnGUI(MaterialEditor materialEditor, MaterialProperty[] props)
@@ -449,7 +448,7 @@ public class SpriteShaderGUI : ShaderGUI
 			bool useCustomRenderType = _customRenderQueue.floatValue > 0.0f;
 			EditorGUI.BeginChangeCheck();
 			EditorGUI.showMixedValue = _customRenderQueue.hasMixedValue;
-			useCustomRenderType = EditorGUILayout.Toggle(_customRenderType, useCustomRenderType);
+			useCustomRenderType = EditorGUILayout.Toggle(_customRenderTypetagsText, useCustomRenderType);
 			if (EditorGUI.EndChangeCheck())
 			{
 				dataChanged = true;
@@ -716,7 +715,7 @@ public class SpriteShaderGUI : ShaderGUI
 		if (emission && !mixedValue)
 		{
 			EditorGUI.BeginChangeCheck();
-			_materialEditor.TexturePropertyWithHDRColor(_emissionText, _emissionMap, _emissionColor, new ColorPickerHDRConfig(0f, 99f, 1 / 99f, 3f), true);
+			_materialEditor.TexturePropertyWithHDRColor(_emissionText, _emissionMap, _emissionColor, true);
 			_materialEditor.FloatProperty(_emissionPower, _emissionPowerText.text);
 			dataChanged |= EditorGUI.EndChangeCheck();
 		}
