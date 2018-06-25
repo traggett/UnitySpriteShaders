@@ -163,7 +163,7 @@ uniform fixed4 _RimColor;
 
 inline fixed3 applyRimLighting(fixed3 posWorld, fixed3 normalWorld, fixed4 pixel) : SV_Target
 {
-	fixed3 viewDir = normalize(_WorldSpaceCameraPos - posWorld);
+	float3 viewDir = mul((float3x3)unity_CameraToWorld, float3(0,0,-1));
 	float invDot =  1.0 - saturate(dot(normalWorld, viewDir));
 	float rimPower = pow(invDot, _RimPower);
 	float rim = saturate(rimPower * _RimColor.a);
