@@ -65,6 +65,37 @@ The shaders allow optional camera-space rim lighting in both lighting modes.
 # How To Use
 Copy the SpriteShaders folder to anywhere inside your Unity Assets folder. On your objects material click the drop down for shader and select either Sprite (Pixel Lit), Sprite (Vertex Lit) or Sprite (Unlit).
 
+## Material Property Names
+Below are some of the Material Property Names/IDs that are commonly animated from code.
+You can use these in conjunction with Unity's MaterialPropertyBlock API ([MaterialPropertyBlock](https://docs.unity3d.com/ScriptReference/MaterialPropertyBlock.html), [Renderer.SetPropreryBlock](https://docs.unity3d.com/ScriptReference/Renderer.SetPropertyBlock.html)) to override property value sper renderer.
+You can also use these with [Shader.PropertyToID](https://docs.unity3d.com/ScriptReference/Shader.PropertyToID.html).
+
+### Main Maps
+**Albedo/Main Texture:** (Texture2D) `_MainTex` (Color) `_Color`  
+**Normal Map:** (Texture2D) `_BumpMap` , (float) `_BumpScale`  
+**Diffuse Ramp:** (Texture2D) `_DiffuseRamp`  
+**Secondary Albedo/Blend Texture:** (Texture2D) `_BlendTexture` , (float) `_BlendAmount`  
+
+### Specular
+**Metallic Gloss Map:** (Texture2D) `_MetallicGlossMap` , (float) `_GlossMapScale`  
+**Smoothness:** (float) `_Glossiness`  
+
+### Emission 
+**Emission:** (Texture2D) `_EmissionMap` , (Color) `_EmissionColor`  
+**Emission Power:** (float) `_EmissionPower`  
+
+### Color Adjustment
+**Overlay Color:** (Color) `_OverlayColor`  
+**Hue:** (float) `_Hue`  
+**Saturation:** (float) `_Saturation`  
+**Brightness:** (float) `_Brightness`  
+
+### Rim Lighting
+**Rim Color:** (Color) `_RimColor`  
+**Rim Power:** (float) `_RimPower`  
+
+You can see a more complete list of the material properties by selecting the relevant Shader asset in your Project View and looking at its Inspector. Note that the list of properties may not show up in the inspector if your project has a script that overrides Shader asset inspectors. Some third-party Shader editors such as ShaderForge do this.
+
 
 # Known Issues
 

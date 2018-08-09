@@ -143,7 +143,7 @@ inline fixed3 calculateRampedDiffuse(fixed3 lightColor, float attenuation, float
 {
 	float d = angleDot * 0.5 + 0.5;
 #if defined(HARD_DIFFUSE_RAMP)
-	half3 ramp = calculateDiffuseRamp(d * attenuation * 2);
+	half3 ramp = calculateDiffuseRamp(d * attenuation * 2 - 1);
 	return lightColor * ramp;
 #else
 	half3 ramp = calculateDiffuseRamp(d);
@@ -163,7 +163,7 @@ uniform fixed4 _RimColor;
 
 inline fixed3 applyRimLighting(fixed3 posWorld, fixed3 normalWorld, fixed4 pixel) : SV_Target
 {
-	fixed3 viewDir = normalize(_WorldSpaceCameraPos - posWorld);
+	float3 viewDir = mul((float3x3)unity_CameraToWorld, float3(0,0,-1));
 	float invDot =  1.0 - saturate(dot(normalWorld, viewDir));
 	float rimPower = pow(invDot, _RimPower);
 	float rim = saturate(rimPower * _RimColor.a);

@@ -57,7 +57,8 @@ inline fixed3 calculateLightDiffuse(VertexOutput input, float3 normalWorld, inou
 	//For directional lights _WorldSpaceLightPos0.w is set to zero
 	float3 lightWorldDirection = normalize(_WorldSpaceLightPos0.xyz - input.posWorld.xyz * _WorldSpaceLightPos0.w);
 	
-	float attenuation = LIGHT_ATTENUATION(input);
+	UNITY_LIGHT_ATTENUATION(attenuation, input, input.posWorld.xyz);
+	
 	float angleDot = max(0, dot(normalWorld, lightWorldDirection));
 	
 #if defined(_DIFFUSE_RAMP)
@@ -178,9 +179,10 @@ fixed4 fragBase(VertexOutput input) : SV_Target
 	
 #if defined(SPECULAR)
 	
+	UNITY_LIGHT_ATTENUATION(attenuation, input, input.posWorld.xyz);
+	
 	//For directional lights _WorldSpaceLightPos0.w is set to zero
 	float3 lightWorldDirection = normalize(_WorldSpaceLightPos0.xyz - input.posWorld.xyz * _WorldSpaceLightPos0.w);
-	float attenuation = LIGHT_ATTENUATION(input);
 	
 	//Returns pixel lit by light, texture color should inlcluded alpha
 	half3 viewDir = normalize(_WorldSpaceCameraPos - input.posWorld.xyz);
@@ -227,9 +229,10 @@ fixed4 fragAdd(VertexOutput input) : SV_Target
 		
 #if defined(SPECULAR)
 	
+	UNITY_LIGHT_ATTENUATION(attenuation, input, input.posWorld.xyz);
+	
 	//For directional lights _WorldSpaceLightPos0.w is set to zero
 	float3 lightWorldDirection = normalize(_WorldSpaceLightPos0.xyz - input.posWorld.xyz * _WorldSpaceLightPos0.w);
-	float attenuation = LIGHT_ATTENUATION(input);
 	
 	half3 viewDir = normalize(_WorldSpaceCameraPos - input.posWorld.xyz);
 	fixed4 pixel = calculateSpecularLightAdditive(getSpecularData(input.texcoord.xy, texureColor, input.color), viewDir, normalWorld, lightWorldDirection, _LightColor0.rgb * attenuation);

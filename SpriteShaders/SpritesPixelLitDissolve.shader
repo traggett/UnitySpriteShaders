@@ -1,4 +1,4 @@
-Shader "Sprite (Pixel Lit)"
+Shader "Sprite (Pixel Lit Dissolve)"
 {
 	Properties
 	{
@@ -39,6 +39,12 @@ Shader "Sprite (Pixel Lit)"
 		
 		_BlendTex ("Blend Texture", 2D) = "white" {}
 		_BlendAmount ("Blend", Range(0,1)) = 0.0
+		
+		_Dissolve("Dissolve", Range(-0.5, 1.5)) = 0.0
+		_DissolveNoiseScale("Dissolve Noise Scale", Range(0.1, 10.0)) = 1.0
+		_DissolveNoiseSpeed("Dissolve Noise Speed", Vector) = (0,0,0,1)		
+		_DissolveEdgePower("Dissolve Edge Power", Range(0.0, 16.0)) = 0.1
+		_DissolveEdgeColor("Dissolve Edge Color", Color) = (1,1,1,1)
 		
 		[HideInInspector] _SrcBlend ("__src", Float) = 1.0
 		[HideInInspector] _DstBlend ("__dst", Float) = 0.0
@@ -83,9 +89,9 @@ Shader "Sprite (Pixel Lit)"
 				#pragma multi_compile _ ETC1_EXTERNAL_ALPHA
 				
 				#pragma vertex vert
-				#pragma fragment fragBase
+				#pragma fragment fragDissolveBase
 				
-				#include "CGIncludes/SpritePixelLighting.cginc"	
+				#include "CGIncludes/SpriteDissolve.cginc"	
 			ENDCG
 		}
 		Pass
@@ -117,9 +123,9 @@ Shader "Sprite (Pixel Lit)"
 				#pragma multi_compile _ ETC1_EXTERNAL_ALPHA
 				
 				#pragma vertex vert
-				#pragma fragment fragAdd
+				#pragma fragment fragDissolveAdd
 				
-				#include "CGIncludes/SpritePixelLighting.cginc"
+				#include "CGIncludes/SpriteDissolve.cginc"
 			ENDCG
 		}
 		Pass
@@ -148,6 +154,6 @@ Shader "Sprite (Pixel Lit)"
 		}
 	}
 	
-	FallBack "Sprite (Vertex Lit)"
-	CustomEditor "SpriteShaderGUI"
+	FallBack "Sprite (Pixel Lit)"
+	CustomEditor "SpriteDiffuseShaderGUI"
 }
