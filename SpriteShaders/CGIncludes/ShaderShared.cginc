@@ -305,11 +305,13 @@ inline fixed4 calculatePixel(fixed4 texureColor) : SV_Target
 
 uniform fixed _Cutoff;
 
-#define ALPHA_CLIP(pixel, color) clip((pixel.a * color.a) - _Cutoff);
+#define ALPHA_CLIP_COLOR(pixel, color) clip((pixel.a * color.a) - _Cutoff);
+#define ALPHA_CLIP(pixel) clip(pixel.a - _Cutoff);
 
 #else
 
-#define ALPHA_CLIP(pixel, color)
+#define ALPHA_CLIP_COLOR(pixel, color)
+#define ALPHA_CLIP(pixel)
 
 #endif
 

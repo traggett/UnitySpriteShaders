@@ -60,7 +60,7 @@ VertexOutput vert(VertexInput input)
 fixed4 frag(VertexOutput input) : SV_Target
 {
 	fixed4 texureColor = calculateTexturePixel(input.texcoord.xy);
-	ALPHA_CLIP(texureColor, input.color)
+	ALPHA_CLIP_COLOR(texureColor, input.color)
 
 	fixed4 pixel = calculatePixel(texureColor, input.color);
 	
