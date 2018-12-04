@@ -2,7 +2,7 @@ Shader "Sprite (Unlit)"
 {
 	Properties
 	{
-		_MainTex ("Main Texture", 2D) = "white" {}
+		[PerRendererData] _MainTex ("Main Texture", 2D) = "white" {}
 		_Color ("Color", Color) = (1,1,1,1)
 		
 		[MaterialToggle] PixelSnap ("Pixel snap", Float) = 0

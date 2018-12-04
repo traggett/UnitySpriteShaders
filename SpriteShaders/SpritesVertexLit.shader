@@ -2,7 +2,7 @@ Shader "Sprite (Vertex Lit)"
 {
 	Properties
 	{
-		_MainTex ("Main Texture", 2D) = "white" {}
+		[PerRendererData] _MainTex ("Main Texture", 2D) = "white" {}
 		_Color ("Color", Color) = (1,1,1,1)
 		
 		_BumpScale("Scale", Float) = 1.0

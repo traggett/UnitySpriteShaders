@@ -779,8 +779,8 @@ public class SpriteShaderGUI : ShaderGUI
 	{
 		//Disable emission by default (is set on by default in standard shader)
 		SetKeyword(material, "_EMISSION", false);
-		//Start with preMultiply alpha by default
-		SetBlendMode(material, eBlendMode.PreMultipliedAlpha);
+		//Start with standard alpha by default
+		SetBlendMode(material, eBlendMode.StandardAlpha);
 		//Start with mesh normals by default
 		SetNormalsMode(material, eNormalsMode.MeshNormals, false);
 		if (_fixedNormal != null)
