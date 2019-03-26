@@ -1,5 +1,3 @@
-// Upgrade NOTE: upgraded instancing buffer 'PerDrawSprite' to new syntax.
-
 #ifndef SHADER_SHARED_INCLUDED
 #define SHADER_SHARED_INCLUDED
 
@@ -9,21 +7,17 @@
 
     UNITY_INSTANCING_BUFFER_START(PerDrawSprite)
         // SpriteRenderer.Color while Non-Batched/Instanced.
-        fixed4 unity_SpriteRendererColorArray[UNITY_INSTANCED_ARRAY_SIZE];
+        UNITY_DEFINE_INSTANCED_PROP(fixed4, unity_SpriteRendererColorArray)
         // this could be smaller but that's how bit each entry is regardless of type
-        float4 unity_SpriteFlipArray[UNITY_INSTANCED_ARRAY_SIZE];
+        UNITY_DEFINE_INSTANCED_PROP(fixed2, unity_SpriteFlipArray)
     UNITY_INSTANCING_BUFFER_END(PerDrawSprite)
 
-    #define _RendererColor unity_SpriteRendererColorArray[unity_InstanceID]
-    #define _Flip unity_SpriteFlipArray[unity_InstanceID]
+    #define _RendererColor  UNITY_ACCESS_INSTANCED_PROP(PerDrawSprite, unity_SpriteRendererColorArray)
+    #define _Flip           UNITY_ACCESS_INSTANCED_PROP(PerDrawSprite, unity_SpriteFlipArray)
 
 #endif // instancing
 
 CBUFFER_START(UnityPerDrawSprite)
-#ifndef UNITY_INSTANCING_ENABLED
-    fixed4 _RendererColor;
-    float4 _Flip;
-#endif
     float _EnableExternalAlpha;
 CBUFFER_END
 
@@ -85,13 +79,18 @@ half3 UnpackScaleNormal(half4 packednormal, half bumpScale)
 
 inline half3 calculateWorldTangent(float4 tangent)
 {
-	return UnityObjectToWorldDir(tangent);
+	return UnityObjectToWorldDir(tangent.xyz);
 }
 
 inline half3 calculateWorldBinormal(half3 normalWorld, half3 tangentWorld, float tangentSign)
 {
-	half sign = tangentSign * unity_WorldTransformParams.w;
-	return cross(normalWorld, tangentWorld) * sign;
+	tangentSign = tangentSign * unity_WorldTransformParams.w;
+	
+#ifdef UNITY_INSTANCING_ENABLED
+	tangentSign *= sign(_Flip.x) * sign(_Flip.y);
+#endif
+	
+	return cross(normalWorld, tangentWorld) * tangentSign;
 }
 
 inline half3 calculateNormalFromBumpMap(float2 texUV, half3 tangentWorld, half3 binormalWorld, half3 normalWorld)
@@ -137,7 +136,7 @@ inline fixed4 calculateLitPixel(fixed4 texureColor, fixed4 color, fixed3 lightin
 #elif defined(_ADDITIVEBLEND_SOFT)
 	//Additive soft
 	finalPixel = texureColor * color;
-	finalPixel.rgb *= lighting * finalPixel.a;
+	finalPixel.rgb *= lighting * finalPixel.a * color.a;
 #else 
 	//Opaque
 	finalPixel.a = 1;
@@ -251,7 +250,7 @@ inline fixed4 calculatePixel(fixed4 texureColor, fixed4 color) : SV_Target
 #elif defined(_ADDITIVEBLEND_SOFT)
 	//Additive soft
 	finalPixel = color * texureColor;
-	finalPixel.rgb *= finalPixel.a;
+	finalPixel.rgb *= finalPixel.a * color.a;
 #else 
 	//Opaque
 	finalPixel.a = 1;
@@ -323,7 +322,11 @@ uniform fixed4 _Color;
 
 inline fixed4 calculateVertexColor(fixed4 color)
 {
-	return color * _Color;
+	fixed4 vertexColor = color * _Color;
+#ifdef UNITY_INSTANCING_ENABLED
+	vertexColor *= _RendererColor;
+#endif
+	return vertexColor;
 }
 
 #if defined(_COLOR_ADJUST)
@@ -395,8 +398,8 @@ inline fixed4 applyFog(fixed4 pixel, float1 fogCoord)
 	//In multipliedx2 mode fade to grey based on inverse luminance
 	float luminance = pixel.r * 0.3 + pixel.g * 0.59 + pixel.b * 0.11;
 	fixed4 fogColor = lerp(fixed4(0.5f,0.5f,0.5f,0.5f), fixed4(0,0,0,0), luminance);
-#elif defined(_ALPHABLEND_ON) || defined(_ALPHAPREMULTIPLY_ON)
-	//In alpha blended modes blend to fog color based on pixel alpha
+#elif defined(_ALPHAPREMULTIPLY_ON)
+	//In pre multiplied alpha blended modes blend from black to fog color based on pixel alpha
 	fixed4 fogColor = lerp(fixed4(0,0,0,0), unity_FogColor, pixel.a);
 #else
 	//In opaque mode just return fog color;

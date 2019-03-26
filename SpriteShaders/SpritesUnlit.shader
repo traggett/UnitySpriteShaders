@@ -51,6 +51,7 @@ Shader "Sprite (Unlit)"
 				
 				#pragma fragmentoption ARB_precision_hint_fastest
 				#pragma multi_compile_fog
+				#pragma multi_compile_instancing
 				#pragma multi_compile _ PIXELSNAP_ON
 				#pragma multi_compile _ ETC1_EXTERNAL_ALPHA
 				
@@ -75,6 +76,7 @@ Shader "Sprite (Unlit)"
 			CGPROGRAM		
 				#pragma fragmentoption ARB_precision_hint_fastest
 				#pragma multi_compile_shadowcaster
+				#pragma multi_compile_instancing
 				#pragma multi_compile _ PIXELSNAP_ON
 				#pragma multi_compile _ ETC1_EXTERNAL_ALPHA
 				

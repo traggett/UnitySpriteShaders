@@ -259,6 +259,10 @@ public class SpriteShaderGUI : ShaderGUI
 
 		dataChanged |= RenderCustomProperties();
 
+		EditorGUILayout.Separator();
+
+		_materialEditor.EnableInstancingField();
+
 		if (dataChanged)
 		{
 			MaterialChanged(_materialEditor);
@@ -981,10 +985,18 @@ public class SpriteShaderGUI : ShaderGUI
 				}
 				break;
 			case eBlendMode.PreMultipliedAlpha:
+				{
+					material.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.One);
+					material.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
+					bool zWrite = material.GetFloat("_ZWrite") > 0.0f;
+					SetRenderType(material, zWrite ? "TransparentCutout" : "Transparent", useCustomRenderQueue);
+					renderQueue = zWrite ? kAlphaTestQueue : kTransparentQueue;
+				}
+				break;
 			case eBlendMode.StandardAlpha:
 			default:
 				{
-					material.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.One);
+					material.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
 					material.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
 					bool zWrite = material.GetFloat("_ZWrite") > 0.0f;
 					SetRenderType(material, zWrite ? "TransparentCutout" : "Transparent", useCustomRenderQueue);
