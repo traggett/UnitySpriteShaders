@@ -114,7 +114,7 @@ inline fixed4 calculateLitPixel(fixed4 texureColor, fixed4 color, fixed3 lightin
 #if defined(_ALPHABLEND_ON)
 	//Normal Alpha
 	finalPixel.a = texureColor.a * color.a;
-	finalPixel.rgb = texureColor.rgb * color.rgb * (lighting * finalPixel.a);
+	finalPixel.rgb = texureColor.rgb * color.rgb * lighting;
 #elif defined(_ALPHAPREMULTIPLY_ON)
 	//Pre multiplied alpha
 	finalPixel = texureColor * color;
@@ -153,7 +153,7 @@ inline fixed4 calculateLitPixel(fixed4 texureColor, fixed3 lighting) : SV_Target
 #if defined(_ALPHABLEND_ON)	
 	//Normal Alpha
 	finalPixel.a = texureColor.a;
-	finalPixel.rgb = texureColor.rgb * (lighting * finalPixel.a);
+	finalPixel.rgb = texureColor.rgb * lighting;
 #elif defined(_ALPHAPREMULTIPLY_ON)
 	//Pre multiplied alpha
 	finalPixel = texureColor;
@@ -229,8 +229,7 @@ inline fixed4 calculatePixel(fixed4 texureColor, fixed4 color) : SV_Target
 	
 #if defined(_ALPHABLEND_ON)	
 	//Normal Alpha
-	finalPixel.a = texureColor.a * color.a;
-	finalPixel.rgb = (texureColor.rgb * color.rgb) * finalPixel.a;
+	finalPixel = texureColor * color;
 #elif defined(_ALPHAPREMULTIPLY_ON)
 	//Pre multiplied alpha
 	finalPixel = texureColor * color;
@@ -266,8 +265,7 @@ inline fixed4 calculatePixel(fixed4 texureColor) : SV_Target
 	
 #if defined(_ALPHABLEND_ON)	
 	//Normal Alpha
-	finalPixel.a = texureColor.a;
-	finalPixel.rgb = texureColor.rgb * finalPixel.a;
+	finalPixel = texureColor;
 #elif defined(_ALPHAPREMULTIPLY_ON)
 	//Pre multiplied alpha
 	finalPixel = texureColor;
@@ -402,7 +400,7 @@ inline fixed4 applyFog(fixed4 pixel, float1 fogCoord)
 	//In pre multiplied alpha blended modes blend from black to fog color based on pixel alpha
 	fixed4 fogColor = lerp(fixed4(0,0,0,0), unity_FogColor, pixel.a);
 #else
-	//In opaque mode just return fog color;
+	//In opaque or standard alpha mode just return fog color;
 	fixed4 fogColor = unity_FogColor;
 #endif 
 	
