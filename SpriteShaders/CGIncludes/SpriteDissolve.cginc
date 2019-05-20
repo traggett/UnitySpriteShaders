@@ -98,10 +98,6 @@ fixed4 fragDissolveBase(VertexOutput input) : SV_Target
 fixed4 fragDissolveAdd(VertexOutput input) : SV_Target
 {
 	fixed4 texureColor = calculateTexturePixel(input.texcoord);
-	
-#if defined(_COLOR_ADJUST)
-	texureColor = adjustColor(texureColor);
-#endif // _COLOR_ADJUST	
 
 	ALPHA_CLIP_COLOR(texureColor, input.color)
 	
