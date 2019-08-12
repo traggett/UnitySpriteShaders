@@ -2,15 +2,15 @@ Shader "Sprite (Pixel Lit)"
 {
 	Properties
 	{
-		[PerRendererData] _MainTex ("Main Texture", 2D) = "white" {}
+		_MainTex ("Main Texture", 2D) = "white" {}
 		_Color ("Color", Color) = (1,1,1,1)
 		
 		_BumpScale("Scale", Float) = 1.0
 		_BumpMap ("Normal Map", 2D) = "bump" {}
 		
 		[MaterialToggle] PixelSnap ("Pixel snap", Float) = 0
-		[PerRendererData] _AlphaTex ("External Alpha", 2D) = "white" {}
-		[PerRendererData] _EnableExternalAlpha ("Enable External Alpha", Float) = 0
+		_AlphaTex ("External Alpha", 2D) = "white" {}
+		_EnableExternalAlpha ("Enable External Alpha", Float) = 0
 		
 		_EmissionColor("Color", Color) = (0,0,0,0)		
 		_EmissionMap("Emission", 2D) = "white" {}
