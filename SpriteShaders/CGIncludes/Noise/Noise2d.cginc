@@ -1,4 +1,4 @@
-#if !defined(CNOISE)
+#if defined(SNOISE)
 	#include "SimplexNoise2D.hlsl"
 #else
 	#include "ClassicNoise2D.hlsl"
