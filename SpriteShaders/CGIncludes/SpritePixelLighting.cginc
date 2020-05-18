@@ -30,7 +30,7 @@ struct VertexOutput
 {
 	float4 pos : SV_POSITION;				
 	fixed4 color : COLOR;
-	float2 texcoord : TEXCOORD0;
+	float4 texcoord : TEXCOORD0;
 	float4 posWorld : TEXCOORD1;
 	half3 normalWorld : TEXCOORD2;
 #if defined(_NORMALMAP)
@@ -73,7 +73,7 @@ inline fixed3 calculateLightDiffuse(VertexOutput input, float3 normalWorld, inou
 inline float3 calculateNormalWorld(VertexOutput input)
 {
 #if defined(_NORMALMAP)
-	return calculateNormalFromBumpMap(input.texcoord, input.tangentWorld, input.binormalWorld, input.normalWorld);
+	return calculateNormalFromBumpMap(input.texcoord.xy, input.tangentWorld, input.binormalWorld, input.normalWorld);
 #else
 	return input.normalWorld;
 #endif
@@ -136,7 +136,8 @@ VertexOutput vert(VertexInput v)
 	
 	output.pos = calculateLocalPos(v.vertex);
 	output.color = calculateVertexColor(v.color);
-	output.texcoord = calculateTextureCoord(v.texcoord);
+	output.texcoord = float4(calculateTextureCoord(v.texcoord), 0, 0);
+	
 	output.posWorld = calculateWorldPos(v.vertex);
 	
 	float backFaceSign = 1;
@@ -167,7 +168,7 @@ VertexOutput vert(VertexInput v)
 
 fixed4 fragBase(VertexOutput input) : SV_Target
 {
-	fixed4 texureColor = calculateTexturePixel(input.texcoord);
+	fixed4 texureColor = calculateTexturePixel(input.texcoord.xy);
 	ALPHA_CLIP_COLOR(texureColor, input.color)
 	
 	//Get normal direction
@@ -188,7 +189,7 @@ fixed4 fragBase(VertexOutput input) : SV_Target
 	half3 viewDir = normalize(_WorldSpaceCameraPos - input.posWorld.xyz);
 	fixed4 pixel = calculateSpecularLight(getSpecularData(input.texcoord.xy, texureColor, input.color), viewDir, normalWorld, lightWorldDirection, _LightColor0.rgb * attenuation, ambient + input.vertexLighting);
 	
-	APPLY_EMISSION_SPECULAR(pixel, input.texcoord)
+	APPLY_EMISSION_SPECULAR(pixel, input.texcoord.xy)
 	
 #else
 
@@ -198,7 +199,7 @@ fixed4 fragBase(VertexOutput input) : SV_Target
 	//Combine along with vertex lighting for the base lighting pass
 	fixed3 lighting = ambient + diffuse + input.vertexLighting;
 	
-	APPLY_EMISSION(lighting, input.texcoord)
+	APPLY_EMISSION(lighting, input.texcoord.xy)
 	
 	fixed4 pixel = calculateLitPixel(texureColor, input.color, lighting);
 	
@@ -216,7 +217,7 @@ fixed4 fragBase(VertexOutput input) : SV_Target
 
 fixed4 fragAdd(VertexOutput input) : SV_Target
 {
-	fixed4 texureColor = calculateTexturePixel(input.texcoord);
+	fixed4 texureColor = calculateTexturePixel(input.texcoord.xy);
 
 	ALPHA_CLIP_COLOR(texureColor, input.color)
 	
