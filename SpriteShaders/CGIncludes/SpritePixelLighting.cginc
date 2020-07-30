@@ -153,7 +153,9 @@ VertexOutput vert(VertexInput v)
 	output.binormalWorld = calculateSpriteWorldBinormal(v, output.normalWorld, output.tangentWorld, backFaceSign);
 #endif
 
+#if defined(TRANSFER_SHADOW)
 	UNITY_TRANSFER_LIGHTING(output, v.texcoord1);
+#endif
 	
 #if defined(_FOG)
 	UNITY_TRANSFER_FOG(output,output.pos);
