@@ -134,7 +134,7 @@ CGPROGRAM
 #include "CGIncludes/ShaderMaths.cginc"
 struct v2f {
     float4 pos : SV_POSITION;
-    float depth : TEXCOORD1;
+    float depth : TEXCOORD0;
 	UNITY_VERTEX_OUTPUT_STEREO
 };
 v2f vert( appdata_base v ) {

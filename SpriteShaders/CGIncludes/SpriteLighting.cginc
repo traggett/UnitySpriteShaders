@@ -19,6 +19,7 @@ struct VertexInput
 {
 	float4 vertex : POSITION;
 	float4 texcoord : TEXCOORD0;
+	float4 texcoord1 : TEXCOORD0;
 	float4 color : COLOR;
 #if defined(MESH_NORMALS)
 	float3 normal : NORMAL;

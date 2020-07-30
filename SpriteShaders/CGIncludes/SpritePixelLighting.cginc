@@ -38,7 +38,7 @@ struct VertexOutput
 	half3 binormalWorld : TEXCOORD4;
 #endif // _NORMALMAP
 	fixed3 vertexLighting : _VERTEX_LIGHTING_INDEX;
-	LIGHTING_COORDS(_LIGHT_COORD_INDEX_0, _LIGHT_COORD_INDEX_1)
+	UNITY_LIGHTING_COORDS(_LIGHT_COORD_INDEX_0, _LIGHT_COORD_INDEX_1)
 #if defined(_FOG)
 	UNITY_FOG_COORDS(_FOG_COORD_INDEX)
 #endif // _FOG	
@@ -153,7 +153,7 @@ VertexOutput vert(VertexInput v)
 	output.binormalWorld = calculateSpriteWorldBinormal(v, output.normalWorld, output.tangentWorld, backFaceSign);
 #endif
 
-	TRANSFER_VERTEX_TO_FRAGMENT(output)
+	UNITY_TRANSFER_LIGHTING(output, v.texcoord1);
 	
 #if defined(_FOG)
 	UNITY_TRANSFER_FOG(output,output.pos);
