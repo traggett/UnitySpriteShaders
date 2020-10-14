@@ -5,6 +5,7 @@
 #include "SpriteLighting.cginc"
 #include "SpriteSpecular.cginc"
 #include "AutoLight.cginc"
+#include "UnityStandardUtils.cginc"
 
 ////////////////////////////////////////
 // Defines
@@ -93,10 +94,38 @@ fixed3 calculateVertexLighting(float3 posWorld, float3 normalWorld)
 	return vertexLighting;
 }
 
-fixed3 calculateAmbientLight(half3 normalWorld)
+
+#if defined(_SPHERICAL_HARMONICS)
+
+half3 calculateSphericalHarmoincs(half3 normal, half3 ambient, float3 worldPos)
+{
+	half3 ambient_contrib = 0.0;
+	
+#if UNITY_LIGHT_PROBE_PROXY_VOLUME
+	if (unity_ProbeVolumeParams.x == 1.0)
+		ambient_contrib = SHEvalLinearL0L1_SampleProbeVolume(half4(normal, 1.0), worldPos);
+	else
+		ambient_contrib = SHEvalLinearL0L1(half4(normal, 1.0));
+#else
+	ambient_contrib = SHEvalLinearL0L1(half4(normal, 1.0));
+#endif
+
+	ambient_contrib += SHEvalLinearL2(half4(normal, 1.0));
+
+	ambient += max(half3(0, 0, 0), ambient_contrib);
+
+#ifdef UNITY_COLORSPACE_GAMMA
+	ambient = LinearToGammaSpace(ambient);
+#endif
+
+	return ambient_contrib;
+}
+#endif
+
+fixed3 calculateAmbientLight(half3 normalWorld, float3 worldPos)
 {
 #if defined(_SPHERICAL_HARMONICS)
-	fixed3 ambient = ShadeSH9(half4(normalWorld, 1.0));
+	fixed3 ambient = calculateSphericalHarmoincs(normalWorld, 0.0, worldPos);
 #else 
 	fixed3 ambient = unity_AmbientSky.rgb;
 #endif
@@ -177,7 +206,7 @@ fixed4 fragBase(VertexOutput input) : SV_Target
 	fixed3 normalWorld = calculateNormalWorld(input);
 
 	//Get Ambient diffuse
-	fixed3 ambient = calculateAmbientLight(normalWorld);
+	fixed3 ambient = calculateAmbientLight(normalWorld, input.posWorld);
 
 	
 #if defined(SPECULAR)

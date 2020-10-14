@@ -52,8 +52,7 @@ fixed4 fragDissolveBase(VertexOutput input) : SV_Target
 	fixed3 normalWorld = calculateNormalWorld(input);
 
 	//Get Ambient diffuse
-	fixed3 ambient = calculateAmbientLight(normalWorld);
-
+	fixed3 ambient = calculateAmbientLight(normalWorld, input.posWorld);
 	
 #if defined(SPECULAR)
 	
