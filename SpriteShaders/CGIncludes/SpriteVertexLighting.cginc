@@ -84,11 +84,11 @@ struct VertexOutput
 	
 #if defined(PER_PIXEL_LIGHTING)
 
-	half4 VertexLightInfo0 : TEXCOORD1; 
-	half4 VertexLightInfo1 : TEXCOORD2;
-	half4 VertexLightInfo2 : TEXCOORD3;  
-	half4 VertexLightInfo3 : TEXCOORD4;
-	half4 VertexLightInfo4 : TEXCOORD5;
+	half4 vertexLightInfo0 : TEXCOORD1; 
+	half4 vertexLightInfo1 : TEXCOORD2;
+	half4 vertexLightInfo2 : TEXCOORD3;  
+	half4 vertexLightInfo3 : TEXCOORD4;
+	half4 vertexLightInfo4 : TEXCOORD5;
 	
 	#if defined(_NORMALMAP)
 		half4 normalWorld : TEXCOORD6;
@@ -96,10 +96,10 @@ struct VertexOutput
 		half4 binormalWorld : TEXCOORD8;
 	#else
 		half3 normalWorld : TEXCOORD6;
-		half3 VertexLightInfo5 : TEXCOORD7;  
+		half3 vertexLightInfo5 : TEXCOORD7;  
 	#endif
 	#if defined(_DIFFUSE_RAMP)
-		half4 LightAttenuations : ATTENUATIONS;
+		half4 lightAttenuations : ATTENUATIONS;
 	#endif
 	#if defined(_RIM_LIGHTING)
 		float4 posWorld : _POS_WORLD_INDEX;
@@ -107,7 +107,7 @@ struct VertexOutput
 
 #else //!PER_PIXEL_LIGHTING
 
-	half3 FullLighting : TEXCOORD1; 
+	half3 fullLighting : TEXCOORD1; 
 	
 #endif // !PER_PIXEL_LIGHTING
 
@@ -115,14 +115,15 @@ struct VertexOutput
 	UNITY_FOG_COORDS(_FOG_COORD_INDEX)
 #endif // _FOG
 
-	UNITY_VERTEX_OUTPUT_STEREO
+	UNITY_VERTEX_INPUT_INSTANCE_ID
+    UNITY_VERTEX_OUTPUT_STEREO
 };
 
 ////////////////////////////////////////
 // Light calculations
 //
 
-struct VertexLightInfo
+struct vertexLightInfo
 {
 	half3 lightDirection;
 	fixed3 lightColor;
@@ -132,9 +133,9 @@ struct VertexLightInfo
 #endif // _DIFFUSE_RAMP
 };
 
-inline VertexLightInfo getVertexLightAttenuatedInfo(int index, float3 viewPos)
+inline vertexLightInfo getVertexLightAttenuatedInfo(int index, float3 viewPos)
 {
-	VertexLightInfo lightInfo;
+	vertexLightInfo lightInfo;
 	
 	//For directional lights unity_LightPosition.w is set to zero
 	lightInfo.lightDirection = unity_LightPosition[index].xyz - viewPos.xyz * unity_LightPosition[index].w;
@@ -234,39 +235,39 @@ inline fixed3 calculateLightDiffuse(fixed3 attenuatedLightColor, half3 viewNorma
 
 #if defined(PER_PIXEL_LIGHTING)
 
-#define VERTEX_LIGHT_0_DIR VertexLightInfo0.xyz
-#define VERTEX_LIGHT_0_R VertexLightInfo4.x
-#define VERTEX_LIGHT_0_G VertexLightInfo4.y
-#define VERTEX_LIGHT_0_B VertexLightInfo4.z
+#define VERTEX_LIGHT_0_DIR vertexLightInfo0.xyz
+#define VERTEX_LIGHT_0_R vertexLightInfo4.x
+#define VERTEX_LIGHT_0_G vertexLightInfo4.y
+#define VERTEX_LIGHT_0_B vertexLightInfo4.z
 
-#define VERTEX_LIGHT_1_DIR  VertexLightInfo1.xyz
-#define VERTEX_LIGHT_1_R VertexLightInfo0.w
-#define VERTEX_LIGHT_1_G VertexLightInfo1.w
-#define VERTEX_LIGHT_1_B VertexLightInfo2.w
+#define VERTEX_LIGHT_1_DIR  vertexLightInfo1.xyz
+#define VERTEX_LIGHT_1_R vertexLightInfo0.w
+#define VERTEX_LIGHT_1_G vertexLightInfo1.w
+#define VERTEX_LIGHT_1_B vertexLightInfo2.w
 
-#define VERTEX_LIGHT_2_DIR VertexLightInfo2.xyz
-#define VERTEX_LIGHT_2_R VertexLightInfo3.w
-#define VERTEX_LIGHT_2_G VertexLightInfo4.w
+#define VERTEX_LIGHT_2_DIR vertexLightInfo2.xyz
+#define VERTEX_LIGHT_2_R vertexLightInfo3.w
+#define VERTEX_LIGHT_2_G vertexLightInfo4.w
 #define VERTEX_LIGHT_2_B texcoord.z
 
-#define VERTEX_LIGHT_3_DIR VertexLightInfo3.xyz
+#define VERTEX_LIGHT_3_DIR vertexLightInfo3.xyz
 
 #if defined(_NORMALMAP)
 	#define VERTEX_LIGHT_3_R normalWorld.w
 	#define VERTEX_LIGHT_3_G tangentWorld.w
 	#define VERTEX_LIGHT_3_B binormalWorld.w
 #else
-	#define VERTEX_LIGHT_3_R VertexLightInfo5.x
-	#define VERTEX_LIGHT_3_G VertexLightInfo5.y
-	#define VERTEX_LIGHT_3_B VertexLightInfo5.z
+	#define VERTEX_LIGHT_3_R vertexLightInfo5.x
+	#define VERTEX_LIGHT_3_G vertexLightInfo5.y
+	#define VERTEX_LIGHT_3_B vertexLightInfo5.z
 #endif
 	
 #if defined(_DIFFUSE_RAMP)
 
-	#define LIGHT_DIFFUSE_ATTEN_0 LightAttenuations.x
-	#define LIGHT_DIFFUSE_ATTEN_1 LightAttenuations.y
-	#define LIGHT_DIFFUSE_ATTEN_2 LightAttenuations.z
-	#define LIGHT_DIFFUSE_ATTEN_3 LightAttenuations.w
+	#define LIGHT_DIFFUSE_ATTEN_0 lightAttenuations.x
+	#define LIGHT_DIFFUSE_ATTEN_1 lightAttenuations.y
+	#define LIGHT_DIFFUSE_ATTEN_2 lightAttenuations.z
+	#define LIGHT_DIFFUSE_ATTEN_3 lightAttenuations.w
 
 	#define PACK_VERTEX_LIGHT_DIFFUSE(index, output, lightInfo) \
 	{ \
@@ -287,7 +288,7 @@ inline fixed3 calculateLightDiffuse(fixed3 attenuatedLightColor, half3 viewNorma
 
 #define PACK_VERTEX_LIGHT(index, output, viewPos) \
 	{ \
-		VertexLightInfo lightInfo = getVertexLightAttenuatedInfo(index, viewPos); \
+		vertexLightInfo lightInfo = getVertexLightAttenuatedInfo(index, viewPos); \
 		output.VERTEX_LIGHT_##index##_DIR = lightInfo.lightDirection; \
 		output.VERTEX_LIGHT_##index##_R = lightInfo.lightColor.r; \
 		output.VERTEX_LIGHT_##index##_G = lightInfo.lightColor.g; \
@@ -323,7 +324,7 @@ inline fixed3 calculateLightDiffuse(fixed3 attenuatedLightColor, half3 viewNorma
 
 inline fixed3 calculateLightDiffuse(int index, float3 viewPos, half3 viewNormal)
 {
-	VertexLightInfo lightInfo = getVertexLightAttenuatedInfo(index, viewPos);
+	vertexLightInfo lightInfo = getVertexLightAttenuatedInfo(index, viewPos);
 	float angleDot = max(0, dot(viewNormal, lightInfo.lightDirection));
 	return lightInfo.lightColor * angleDot;
 }
@@ -338,7 +339,8 @@ VertexOutput vert(VertexInput input)
 {
 	VertexOutput output;
 	
-	UNITY_SETUP_INSTANCE_ID(input);
+	UNITY_SETUP_INSTANCE_ID(v);
+    UNITY_TRANSFER_INSTANCE_ID(v, output);
     UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(output);
 	
 	output.pos = calculateLocalPos(input.vertex);
@@ -386,7 +388,7 @@ VertexOutput vert(VertexInput input)
 	diffuse += calculateLightDiffuse(2, viewPos, viewNormal);
 	diffuse += calculateLightDiffuse(3, viewPos, viewNormal);
 	
-	output.FullLighting = ambient + diffuse;
+	output.fullLighting = ambient + diffuse;
 	
 #endif // !PER_PIXEL_LIGHTING
 	
@@ -459,9 +461,9 @@ fixed4 frag(VertexOutput input) : SV_Target
 	
 #else // !PER_PIXEL_LIGHTING
 	
-	APPLY_EMISSION(input.FullLighting, input.texcoord.xy)
+	APPLY_EMISSION(input.fullLighting, input.texcoord.xy)
 	
-	fixed4 pixel = calculateLitPixel(texureColor, input.color, input.FullLighting);
+	fixed4 pixel = calculateLitPixel(texureColor, input.color, input.fullLighting);
 
 #endif // !PER_PIXEL_LIGHTING	
 	

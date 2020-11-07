@@ -5,7 +5,6 @@
 #include "SpriteLighting.cginc"
 #include "SpriteSpecular.cginc"
 #include "AutoLight.cginc"
-#include "UnityStandardUtils.cginc"
 
 ////////////////////////////////////////
 // Defines
@@ -16,14 +15,8 @@
 //
 
 #if defined(_NORMALMAP)
-	#define _VERTEX_LIGHTING_INDEX TEXCOORD5
-	#define _LIGHT_COORD_INDEX_0 6
-	#define _LIGHT_COORD_INDEX_1 7
 	#define _FOG_COORD_INDEX 8
 #else
-	#define _VERTEX_LIGHTING_INDEX TEXCOORD3
-	#define _LIGHT_COORD_INDEX_0 4
-	#define _LIGHT_COORD_INDEX_1 5
 	#define _FOG_COORD_INDEX 6
 #endif // _NORMALMAP	
 
@@ -34,17 +27,22 @@ struct VertexOutput
 	float4 texcoord : TEXCOORD0;
 	float4 posWorld : TEXCOORD1;
 	half3 normalWorld : TEXCOORD2;
+	
+	UNITY_LIGHTING_COORDS(3, 4)
+	
+	fixed3 vertexLighting : TEXCOORD5;
+	
 #if defined(_NORMALMAP)
-	half3 tangentWorld : TEXCOORD3;  
-	half3 binormalWorld : TEXCOORD4;
+	half3 tangentWorld : TEXCOORD6;  
+	half3 binormalWorld : TEXCOORD7;
 #endif // _NORMALMAP
-	fixed3 vertexLighting : _VERTEX_LIGHTING_INDEX;
-	UNITY_LIGHTING_COORDS(_LIGHT_COORD_INDEX_0, _LIGHT_COORD_INDEX_1)
+
 #if defined(_FOG)
 	UNITY_FOG_COORDS(_FOG_COORD_INDEX)
 #endif // _FOG	
 
-	UNITY_VERTEX_OUTPUT_STEREO
+    UNITY_VERTEX_INPUT_INSTANCE_ID
+    UNITY_VERTEX_OUTPUT_STEREO
 };
 
 ////////////////////////////////////////
@@ -160,7 +158,8 @@ VertexOutput vert(VertexInput v)
 {
 	VertexOutput output;
 	
-	UNITY_SETUP_INSTANCE_ID(input);
+	UNITY_SETUP_INSTANCE_ID(v);
+    UNITY_TRANSFER_INSTANCE_ID(v, output);
     UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(output);
 	
 	output.pos = calculateLocalPos(v.vertex);
@@ -182,9 +181,7 @@ VertexOutput vert(VertexInput v)
 	output.binormalWorld = calculateSpriteWorldBinormal(v, output.normalWorld, output.tangentWorld, backFaceSign);
 #endif
 
-#if defined(TRANSFER_SHADOW)
 	UNITY_TRANSFER_LIGHTING(output, v.texcoord1);
-#endif
 	
 #if defined(_FOG)
 	UNITY_TRANSFER_FOG(output,output.pos);

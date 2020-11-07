@@ -49,7 +49,7 @@ Shader "Sprite (Pixel Lit)"
 	SubShader
 	{
 		Tags { "Queue"="Transparent" "RenderType"="Sprite" "AlphaDepth"="False" "CanUseSpriteAtlas"="True" "IgnoreProjector"="True" }
-		LOD 200
+		LOD 300
 		
 		Pass
 		{
@@ -77,7 +77,6 @@ Shader "Sprite (Pixel Lit)"
 				#pragma shader_feature _FOG
 				
 				#pragma multi_compile_fwdbase
-				#pragma fragmentoption ARB_precision_hint_fastest
 				#pragma multi_compile_fog
 				#pragma multi_compile_instancing
 				#pragma multi_compile _ PIXELSNAP_ON
@@ -112,9 +111,7 @@ Shader "Sprite (Pixel Lit)"
 				#pragma shader_feature _FOG
 				
 				#pragma multi_compile_fwdadd_fullshadows
-				#pragma fragmentoption ARB_precision_hint_fastest
 				#pragma multi_compile_fog
-				#pragma multi_compile_instancing
 				#pragma multi_compile _ PIXELSNAP_ON
 				#pragma multi_compile _ ETC1_EXTERNAL_ALPHA
 				
@@ -136,8 +133,9 @@ Shader "Sprite (Pixel Lit)"
 			Cull Off
 			Lighting Off
 			
-			CGPROGRAM		
-				#pragma fragmentoption ARB_precision_hint_fastest
+			CGPROGRAM
+				#pragma target 3.0
+				
 				#pragma multi_compile_shadowcaster
 				#pragma multi_compile_instancing
 				#pragma multi_compile _ PIXELSNAP_ON

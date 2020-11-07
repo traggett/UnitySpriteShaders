@@ -77,8 +77,6 @@ Shader "Sprite (Vertex Lit)"
 				#pragma shader_feature _SPHERICAL_HARMONICS
 				#pragma shader_feature _FOG
 				
-			
-				#pragma fragmentoption ARB_precision_hint_fastest
 				#pragma multi_compile_fog
 				#pragma multi_compile_instancing
 				#pragma multi_compile _ PIXELSNAP_ON
@@ -102,8 +100,9 @@ Shader "Sprite (Vertex Lit)"
 			Cull Off
 			Lighting Off
 			
-			CGPROGRAM		
-				#pragma fragmentoption ARB_precision_hint_fastest
+			CGPROGRAM
+				#pragma target 3.0	
+				
 				#pragma multi_compile_shadowcaster
 				#pragma multi_compile_instancing
 				#pragma multi_compile _ PIXELSNAP_ON
