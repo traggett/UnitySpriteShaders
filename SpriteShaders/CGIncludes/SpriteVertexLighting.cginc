@@ -339,8 +339,8 @@ VertexOutput vert(VertexInput input)
 {
 	VertexOutput output;
 	
-	UNITY_SETUP_INSTANCE_ID(v);
-    UNITY_TRANSFER_INSTANCE_ID(v, output);
+	UNITY_SETUP_INSTANCE_ID(input);
+    UNITY_TRANSFER_INSTANCE_ID(input, output);
     UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(output);
 	
 	output.pos = calculateLocalPos(input.vertex);
