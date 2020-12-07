@@ -1,0 +1,10 @@
+{
+	"author": "Tom Raggett (https://github.com/traggett)",
+	"description": "A set of Uber Shaders for rendering Sprites in Unity.",
+	"displayName": "Unity Sprite Shaders",
+	"license": "MIT",
+	"name": "com.traggett.unityspriteshaders",
+	"version": "1.0.0",
+	"dependencies": {
+	}
+}
